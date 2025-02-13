@@ -1,0 +1,89 @@
+# Color
+
+## Text
+text.color: "#2E3440"
+axes.labelcolor: "#2E3440"
+xtick.labelcolor: "#2E3440"
+ytick.labelcolor: "#2E3440"
+
+## Edges
+axes.edgecolor: "#2E3440"
+patch.edgecolor: "#2E3440"
+legend.edgecolor: "#2E3440"
+
+## Ticks
+xtick.color: "#2E3440"
+ytick.color: "#2E3440"
+
+## Lines
+axes.prop_cycle: cycler("color", ["363b46", "#426ca4", "#bb3b5f", "#5fb054"])
+grid.color: "#D8DEE9"
+hatch.color: "#5E81AC"
+
+
+#  Font
+font.size: 9
+font.family: sans-serif
+font.sans-serif: Fira Sans
+
+
+# Axes
+axes.autolimit_mode: data
+axes.axisbelow: True
+axes.formatter.limits: -3, 4
+axes.formatter.use_mathtext: True
+axes.labelpad: 1.5
+axes.spines.right: False
+axes.spines.top: False
+axes.xmargin: 0.02
+axes.ymargin: 0.02
+axes.zmargin: 0.02
+
+
+# Ticks
+xtick.direction: out
+xtick.major.pad: 1.5
+xtick.minor.visible: True
+
+ytick.direction: out
+ytick.major.pad: 1.5
+ytick.minor.visible: True
+
+# Grid
+axes.grid: True
+grid.linestyle: --
+grid.alpha: 0.8
+
+# Lines
+lines.linewidth: 1.0
+
+# Figure
+figure.autolayout: False
+figure.constrained_layout.use: True
+figure.dpi: 140
+
+
+# Title
+axes.titlelocation: left
+axes.titlepad: 6.0
+axes.titlesize: medium
+axes.titleweight: bold
+
+# Misc
+hist.bins: 20
+image.cmap: cividis
+pcolor.shading: gouraud
+
+# Contour Plots
+contour.negative_linestyle: dashed
+contour.linewidth: 0.6
+contour.algorithm: threaded
+
+# Legends
+legend.columnspacing: 1.0
+legend.frameon: False
+legend.handleheight: 0.5
+legend.handlelength: 1.5
+legend.handletextpad: 0.6
+legend.labelspacing: 0.2
+legend.fontsize: 8
