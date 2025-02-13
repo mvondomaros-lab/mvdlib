@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.10.16"
+__generated_with = "0.11.2"
 app = marimo.App(width="full")
 
 
@@ -23,64 +23,77 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(FIGSIZE, SimpleNamespace, mo, mvdlib, np, plt):
-    def grw(nsamples, nsteps, nmsds, dt, diff, seed=42):
-        rng = np.random.default_rng(seed)
+def _(FIGSIZE, mo, mvdlib, np, plt):
+    class Samples:
+        def __init__(self, t, ref=None):
+            self.t = t
+            self.ref = ref
+            self._samples = []
 
-        t = np.arange(nsteps + 1) * dt
-        tmsd = np.arange(nmsds) * dt
+        def add(self, sample):
+            self._samples.append(sample)
 
-        samples = []
-        msds = []
-        for _ in range(nsamples):
-            x = mvdlib.diffusion.grw(nsteps, diff=diff, dt=dt, rng=rng)
-            msd = mvdlib.diffusion.msd(x, maxsteps=nmsds)
-            samples.append(x)
-            msds.append(msd)
+        @property
+        def samples(self):
+            return np.transpose(self._samples)
 
-        msd_mean = np.mean(msds, axis=0)
-        msd_exact = 2.0 * diff * tmsd
-
-        return SimpleNamespace(
-            {
-                "t": t,
-                "samples": samples,
-                "tmsd": tmsd,
-                "msds": msds,
-                "msd_mean": msd_mean,
-                "msd_exact": msd_exact,
-            }
-        )
+        @property
+        def mean(self):
+            return np.mean(self._samples, axis=0)
 
 
-    def grw_plot(data):
-        nrows, ncols = 1, 2
-        fig, axes = plt.subplots(nrows, ncols, figsize=FIGSIZE(nrows, ncols))
+    class GRWData:
+        def __init__(
+            self,
+            nsamples=10,
+            nsteps=10000,
+            nmsd=100,
+            dt=0.001,
+            diff=3.0e-3,
+            seed=42,
+        ):
+            rng = np.random.default_rng(seed)
 
-        for x in data.samples:
-            axes[0].plot(data.t, x, color="C1", alpha=0.5)
-        for msd in data.msds:
-            axes[1].plot(data.tmsd, msd, color="C1", alpha=0.5)
-        axes[1].plot(data.tmsd, data.msd_mean, color="C2", label="sample mean")
-        axes[1].plot(
-            data.tmsd, data.msd_exact, ls="--", color="C0", label="expected"
-        )
+            t = np.arange(nsteps + 1) * dt
+            self.x = Samples(t)
 
-        for ax in axes:
-            ax.xaxis.set_major_locator(plt.MaxNLocator(6))
-            ax.yaxis.set_major_locator(plt.MaxNLocator(6))
+            t = np.arange(nmsd) * dt
+            ref = 2.0 * diff * t
+            self.msd = Samples(t, ref)
 
-        axes[0].set_xlabel(r"$t$")
-        axes[0].set_ylabel(r"$x$")
+            for _ in range(nsamples):
+                x = mvdlib.diffusion.grw(nsteps, diff=diff, dt=dt, rng=rng)
+                msd = mvdlib.diffusion.msd(x, maxsteps=nmsd)
+                self.x.add(x)
+                self.msd.add(msd)
 
-        axes[1].set_xlabel(r"$t$")
-        axes[1].set_ylabel(r"$\left<\left[x(t)-x(0)\right]^2\right>$")
-        axes[1].legend()
+        def plot(self):
+            nrows, ncols = 1, 2
+            fig, axes = plt.subplots(nrows, ncols, figsize=FIGSIZE(nrows, ncols))
 
-        return fig
+            sample_style = {"color": "C1", "alpha": 0.5}
+            mean_style = {"color": "C2", "label": "sample mean"}
+            ref_style = {"color": "C0", "ls": "--", "label": "reference"}
 
+            for ax in axes:
+                ax.xaxis.set_major_locator(plt.MaxNLocator(6))
+                ax.yaxis.set_major_locator(plt.MaxNLocator(6))
 
-    _data = grw(nsamples=10, nsteps=10000, nmsds=100, dt=0.1, diff=3.03e-3)
+            ax = axes[0]
+            ax.plot(self.x.t, self.x.samples, **sample_style)
+            ax.set_xlabel(r"$t$")
+            ax.set_ylabel(r"$x$")
+
+            ax = axes[1]
+            ax.plot(self.msd.t, self.msd.samples, **sample_style)
+            ax.plot(self.msd.t, self.msd.mean, **mean_style)
+            ax.plot(self.msd.t, self.msd.ref, **ref_style)
+            ax.set_xlabel(r"$t$")
+            ax.set_ylabel(r"$\left<\left[x(t)-x(0)\right]^2\right>$")
+            ax.legend()
+
+            return mo.as_html(fig)
+
 
     mo.md(
         rf"""
@@ -112,10 +125,10 @@ def _(FIGSIZE, SimpleNamespace, mo, mvdlib, np, plt):
         while maintaining proper scaling.
         This is [Donsker's theorem](https://en.wikipedia.org/wiki/Donsker%27s_theorem).
 
-        {mo.as_html(grw_plot(_data))}
+        {GRWData().plot()}
         """
     )
-    return grw, grw_plot
+    return GRWData, Samples
 
 
 @app.cell(hide_code=True)
@@ -124,111 +137,90 @@ def _(mo):
     return
 
 
-@app.cell(hide_code=True)
-def _(FIGSIZE, SimpleNamespace, mo, mvdlib, np, plt):
-    def ld_samples(nsamples, nsteps, nmsds, ntcfs, dt, mass, kt, diff, seed=42):
-        rng = np.random.default_rng(seed)
+@app.cell
+def _(FIGSIZE, Samples, mo, mvdlib, np, plt):
+    class LDData:
+        def __init__(
+            self,
+            nsamples=10,
+            nsteps=10000,
+            nmsd=100,
+            ncv=100,
+            dt=0.001,
+            mass=18.0,
+            kt=2.5,
+            diff=3.0e-3,
+            seed=42,
+        ):
+            rng = np.random.default_rng(seed)
 
-        t = np.arange(nsteps + 1) * dt
-        tmsd = np.arange(nmsds) * dt
-        ttcf = np.arange(ntcfs) * dt
+            gamma = kt / diff
+            tau = mass / gamma
 
-        xsamples = []
-        vsamples = []
-        msds = []
-        tcfs = []
-        for _ in range(nsamples):
-            x, v = mvdlib.diffusion.ld(
-                nsteps, mass=mass, diff=diff, kt=kt, dt=dt, rng=rng
-            )
-            msd = mvdlib.diffusion.msd(x, maxsteps=nmsds)
-            tcf = mvdlib.stats.tcf(v, nc=ntcfs)
-            xsamples.append(x)
-            vsamples.append(v)
-            msds.append(msd)
-            tcfs.append(tcf)
+            t = np.arange(nsteps + 1) * dt
+            self.x = Samples(t)
+            self.v = Samples(t)
 
-        damp = kt / diff
-        tau = mass / damp
+            t = np.arange(nmsd) * dt
+            ref = 2.0 * diff * (t - tau * (1.0 - np.exp(-t / tau)))
+            self.msd = Samples(t, ref)
 
-        mean_msd = np.mean(msds, axis=0)
-        expected_msd = 2.0 * diff * (tmsd - tau * (1.0 - np.exp(-tmsd / tau)))
+            t = np.arange(ncv) * dt
+            ref = (kt / mass) * np.exp(-t / tau)
+            self.cv = Samples(t, ref)
 
-        mean_tcf = np.mean(tcfs, axis=0)
-        expected_tcf = kt / mass * np.exp(-ttcf / tau)
+            for _ in range(nsamples):
+                x, v = mvdlib.diffusion.ld(
+                    nsteps, mass=mass, diff=diff, kt=kt, dt=dt, rng=rng
+                )
+                msd = mvdlib.diffusion.msd(x, maxsteps=nmsd)
+                cv = mvdlib.stats.tcf(v, nc=ncv)
+                self.x.add(x)
+                self.v.add(v)
+                self.msd.add(msd)
+                self.cv.add(cv)
 
-        return SimpleNamespace(
-            {
-                "t": t,
-                "xsamples": xsamples,
-                "vsamples": vsamples,
-                "tmsd": tmsd,
-                "msds": msds,
-                "mean_msd": mean_msd,
-                "expected_msd": expected_msd,
-                "ttcf": ttcf,
-                "tcfs": tcfs,
-                "mean_tcf": mean_tcf,
-                "expected_tcf": expected_tcf,
-            }
-        )
+        def plot(self):
+            nrows, ncols = 2, 2
+            fig, axes = plt.subplots(nrows, ncols, figsize=FIGSIZE(nrows, ncols))
 
+            sample_style = {"color": "C1", "alpha": 0.5}
+            mean_style = {"color": "C2", "label": "sample mean"}
+            ref_style = {"color": "C0", "ls": "--", "label": "reference"}
 
-    def ld_plot(data):
-        nrows, ncols = 2, 2
-        fig, axes = plt.subplots(nrows, ncols, figsize=FIGSIZE(nrows, ncols))
+            for ax in axes.flat:
+                ax.xaxis.set_major_locator(plt.MaxNLocator(6))
+                ax.yaxis.set_major_locator(plt.MaxNLocator(6))
 
-        for x in data.xsamples:
-            axes[0, 0].plot(data.t, x, color="C1", alpha=0.5)
-        for v in data.vsamples:
-            axes[1, 0].plot(data.t, v, color="C1", alpha=0.5)
-        for msd in data.msds:
-            axes[0, 1].plot(data.tmsd, msd, color="C1", alpha=0.5)
-        for tcf in data.tcfs:
-            axes[1, 1].plot(data.ttcf, tcf, color="C1", alpha=0.5)
+            ax = axes[0, 0]
+            ax.plot(self.x.t, self.x.samples, **sample_style)
+            ax.set_xlabel(r"$t$")
+            ax.set_ylabel(r"$x$")
 
-        axes[0, 1].plot(data.tmsd, data.mean_msd, color="C2", label="sample mean")
-        axes[0, 1].plot(
-            data.tmsd, data.expected_msd, ls="--", color="C0", label="expected"
-        )
+            ax = axes[1, 0]
+            ax.plot(self.v.t, self.v.samples, **sample_style)
+            ax.set_xlabel(r"$t$")
+            ax.set_ylabel(r"$v$")
 
-        axes[1, 1].plot(data.ttcf, data.mean_tcf, color="C2", label="sample mean")
-        axes[1, 1].plot(
-            data.ttcf, data.expected_tcf, ls="--", color="C0", label="expected"
-        )
+            ax = axes[0, 1]
+            ax.plot(self.msd.t, self.msd.samples, **sample_style)
+            ax.plot(self.msd.t, self.msd.mean, **mean_style)
+            ax.plot(self.msd.t, self.msd.ref, **ref_style)
+            ax.set_xlabel(r"$t$")
+            ax.set_ylabel(r"$\left<\left[x(t)-x(0)\right]^2\right>$")
+            ax.legend()
 
-        for ax in axes.flat:
-            ax.xaxis.set_major_locator(plt.MaxNLocator(6))
-            ax.yaxis.set_major_locator(plt.MaxNLocator(6))
+            ax = axes[1, 1]
+            ax.plot(self.cv.t, self.cv.samples, **sample_style)
+            ax.plot(self.cv.t, self.cv.mean, **mean_style)
+            ax.plot(self.cv.t, self.cv.ref, **ref_style)
+            ax.set_xlabel(r"$t$")
+            ax.set_ylabel(r"$\left<v(t)v(0)\right>$")
+            ax.legend()
+            ax.set_yscale("log")
 
-        axes[0, 0].set_xlabel(r"$t$")
-        axes[0, 0].set_ylabel(r"$x$")
+            return mo.as_html(fig)
 
-        axes[0, 1].set_xlabel(r"$t$")
-        axes[0, 1].set_ylabel(r"$\left<\left[x(t)-x(0)\right]^2\right>$")
-        axes[0, 1].legend()
-
-        axes[1, 0].set_xlabel(r"$t$")
-        axes[1, 0].set_ylabel(r"$v$")
-
-        axes[1, 1].set_xlabel(r"$t$")
-        axes[1, 1].set_ylabel(r"$\left<v(t)v(0)\right>$")
-        axes[1, 1].legend()
-        axes[1, 1].set_yscale("log")
-
-        return fig
-
-
-    _data = ld_samples(
-        nsamples=10,
-        nsteps=10000,
-        nmsds=100,
-        ntcfs=100,
-        dt=0.001,
-        mass=18.0,
-        kt=2.5,
-        diff=3.0e-3,
-    )
 
     mo.md(
         rf"""
@@ -295,10 +287,10 @@ def _(FIGSIZE, SimpleNamespace, mo, mvdlib, np, plt):
         \end{{align}}
         $$
 
-        {mo.as_html(ld_plot(_data))}
+        {LDData().plot()}
         """
     )
-    return ld_plot, ld_samples
+    return (LDData,)
 
 
 @app.cell(hide_code=True)
@@ -307,8 +299,8 @@ def _(mo):
     return
 
 
-@app.cell
-def _(FIGSIZE, SimpleNamespace, mo, mvdlib, np, numba, plt):
+app._unparsable_cell(
+    r"""
     def ld_ho_samples(
         nsamples, nsteps, nmsds, nptcfs, nvtcfs, dt, mass, kt, diff, fcon, seed=42
     ):
@@ -340,7 +332,7 @@ def _(FIGSIZE, SimpleNamespace, mo, mvdlib, np, numba, plt):
             ptcf = mvdlib.stats.tcf(x, nc=nptcfs)
             vtcf = mvdlib.stats.tcf(v, nc=nvtcfs)
 
-            laplace = mvdlib.diffusion.laplace(x, t, s)
+            laplace = mvdlib.diffusion.laplace(vtcf, , s)
             xsamples.append(x)
             vsamples.append(v)
             msds.append(msd)
@@ -403,26 +395,26 @@ def _(FIGSIZE, SimpleNamespace, mo, mvdlib, np, numba, plt):
 
         return SimpleNamespace(
             {
-                "t": t,
-                "xsamples": xsamples,
-                "vsamples": vsamples,
-                "tmsd": tmsd,
-                "msds": msds,
-                "mean_msd": mean_msd,
-                "limit_msd": limit_msd,
-                "expected_msd": expected_msd,
-                "tptcf": tptcf,
-                "tvtcf": tvtcf,
-                "ptcfs": ptcfs,
-                "vtcfs": vtcfs,
-                "mean_ptcf": mean_ptcf,
-                "mean_vtcf": mean_vtcf,
-                "expected_ptcf": expected_ptcf,
-                "expected_vtcf": expected_vtcf,
-                "laplaces": laplaces,
-                "mean_laplace": mean_laplace,
-                "expected_laplace": expected_laplace,
-                "s": s,
+                \"t\": t,
+                \"xsamples\": xsamples,
+                \"vsamples\": vsamples,
+                \"tmsd\": tmsd,
+                \"msds\": msds,
+                \"mean_msd\": mean_msd,
+                \"limit_msd\": limit_msd,
+                \"expected_msd\": expected_msd,
+                \"tptcf\": tptcf,
+                \"tvtcf\": tvtcf,
+                \"ptcfs\": ptcfs,
+                \"vtcfs\": vtcfs,
+                \"mean_ptcf\": mean_ptcf,
+                \"mean_vtcf\": mean_vtcf,
+                \"expected_ptcf\": expected_ptcf,
+                \"expected_vtcf\": expected_vtcf,
+                \"laplaces\": laplaces,
+                \"mean_laplace\": mean_laplace,
+                \"expected_laplace\": expected_laplace,
+                \"s\": s,
             }
         )
 
@@ -465,64 +457,64 @@ def _(FIGSIZE, SimpleNamespace, mo, mvdlib, np, numba, plt):
 
         for i, (fac, fcon, data) in enumerate(datasets):
             for msd in data.msds:
-                axes[0, i].plot(data.tmsd, msd, color="C1", alpha=0.5)
+                axes[0, i].plot(data.tmsd, msd, color=\"C1\", alpha=0.5)
             for ptcf in data.ptcfs:
-                axes[1, i].plot(data.tptcf, ptcf, color="C1", alpha=0.5)
+                axes[1, i].plot(data.tptcf, ptcf, color=\"C1\", alpha=0.5)
             for vtcf in data.vtcfs:
-                axes[2, i].plot(data.tvtcf, vtcf, color="C1", alpha=0.5)
+                axes[2, i].plot(data.tvtcf, vtcf, color=\"C1\", alpha=0.5)
             for laplace in data.laplaces:
-                axes[3, i].plot(data.s, laplace, color="C1", alpha=0.5)
+                axes[3, i].plot(data.s, laplace, color=\"C1\", alpha=0.5)
 
             if fac < 1.0:
-                title = "strong damping"
+                title = \"strong damping\"
             elif fac > 1.0:
-                title = "weak damping"
+                title = \"weak damping\"
             else:
-                title = "critical damping"
+                title = \"critical damping\"
             axes[0, i].set_title(title)
 
             axes[0, i].plot(
-                data.tmsd, data.mean_msd, color="C2", label="sample mean"
+                data.tmsd, data.mean_msd, color=\"C2\", label=\"sample mean\"
             )
             axes[0, i].plot(
                 data.tmsd,
                 data.expected_msd,
-                color="C0",
-                ls="--",
-                label="expected",
+                color=\"C0\",
+                ls=\"--\",
+                label=\"expected\",
             )
 
             axes[1, i].plot(
-                data.tptcf, data.mean_ptcf, color="C2", label="sample mean"
+                data.tptcf, data.mean_ptcf, color=\"C2\", label=\"sample mean\"
             )
             axes[1, i].plot(
                 data.tptcf,
                 data.expected_ptcf,
-                color="C0",
-                ls="--",
-                label="expected",
+                color=\"C0\",
+                ls=\"--\",
+                label=\"expected\",
             )
 
             axes[2, i].plot(
-                data.tvtcf, data.mean_vtcf, color="C2", label="sample mean"
+                data.tvtcf, data.mean_vtcf, color=\"C2\", label=\"sample mean\"
             )
             axes[2, i].plot(
                 data.tvtcf,
                 data.expected_vtcf,
-                color="C0",
-                ls="--",
-                label="expected",
+                color=\"C0\",
+                ls=\"--\",
+                label=\"expected\",
             )
 
             axes[3, i].plot(
-                data.s, data.mean_laplace, color="C2", label="sample mean"
+                data.s, data.mean_laplace, color=\"C2\", label=\"sample mean\"
             )
             axes[3, i].plot(
                 data.s,
                 data.expected_laplace,
-                color="C0",
-                ls="--",
-                label="expected",
+                color=\"C0\",
+                ls=\"--\",
+                label=\"expected\",
             )
             min, max = np.min(data.expected_laplace), np.max(data.expected_laplace)
             axes[3, i].set_ylim(min - 0.02 * (max - min), max + 0.02 * (max - min))
@@ -533,23 +525,23 @@ def _(FIGSIZE, SimpleNamespace, mo, mvdlib, np, numba, plt):
             ax.legend()
 
         for ax in axes[:2, :].flat:
-            ax.set_xlabel(r"$t$")
+            ax.set_xlabel(r\"$t$\")
 
         for ax in axes[3, :].flat:
-            ax.set_xlabel(r"$s$")
+            ax.set_xlabel(r\"$s$\")
 
-        axes[0, 0].set_ylabel(r"$\left<\left[x(t)-x(0)\right]^2\right>$")
-        axes[1, 0].set_ylabel(r"$\left<x(t)x(0)\right>$")
-        axes[2, 0].set_ylabel(r"$\left<v(t)v(0)\right>$")
+        axes[0, 0].set_ylabel(r\"$\left<\left[x(t)-x(0)\right]^2\right>$\")
+        axes[1, 0].set_ylabel(r\"$\left<x(t)x(0)\right>$\")
+        axes[2, 0].set_ylabel(r\"$\left<v(t)v(0)\right>$\")
         axes[3, 0].set_ylabel(
-            r"$\mathcal{{L}}\left\lbrace\left<v(t)v(0)\right>\right\rbrace(s)$"
+            r\"$\mathcal{{L}}\left\lbrace\left<v(t)v(0)\right>\right\rbrace(s)$\"
         )
 
         return fig
 
 
     mo.md(
-        rf"""
+        rf\"\"\"
         The Langevin equation can be extended to describe diffusion in a harmonic potential.
 
         $$
@@ -598,14 +590,12 @@ def _(FIGSIZE, SimpleNamespace, mo, mvdlib, np, numba, plt):
         $$
 
         {mo.as_html(ld_ho_plot(_get_datasets()))}    
-        """
+        \"\"\"
     )
-    return ld_ho_plot, ld_ho_samples
-
-
-@app.cell
-def _():
-    return
+    """,
+    name="_",
+    column=None, disabled=False, hide_code=True
+)
 
 
 @app.cell(hide_code=True)
