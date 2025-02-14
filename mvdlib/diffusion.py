@@ -24,13 +24,13 @@ def _ld_core(
     rng: np.random.Generator,
 ) -> Tuple[NDArray[np.float64], NDArray[np.float64]]:
     """
-    Simulate one-dimensional Langevin dynamics in an external potential.
+    Simulate one-dimensional Langevin dynamics.
 
-    Numba-optimized core function.
+    Numba-optimized core function implementing the BAOAB integrator.
 
     :param nsteps: The number of simulation steps.
     :param mass: The mass of the particle
-    :param gamma: The damping constant.
+    :param gamma: The friction constant.
     :param kt: The thermal energy (Boltzmann constant times temperature).
     :param x0: The initial position.
     :param v0: The initial velocity.
@@ -40,15 +40,23 @@ def _ld_core(
 
     :return: The simulated positions and velocities.
     """
+    # BAOAB is formulated in terms of a damping rate.
+    gamma = gamma / mass
     x = np.empty(nsteps + 1, dtype=np.float64)
     v = np.empty(nsteps + 1, dtype=np.float64)
     x[0] = x0
     v[0] = v0
+    c1 = np.exp(-gamma * dt)
+    c3 = np.sqrt(kt * (1 - c1**2))
+    c3m = c3 / np.sqrt(mass)
     dtm = dt / mass
-    r = rng.normal(loc=0.0, scale=np.sqrt(2.0 * gamma * kt * dt) / mass, size=nsteps)
+    r = rng.normal(size=nsteps)
     for i in range(1, nsteps + 1):
-        x[i] = x[i - 1] + v[i - 1] * dt
-        v[i] = v[i - 1] + (fext(x[i - 1]) - gamma * v[i - 1]) * dtm + r[i - 1]
+        v[i] = v[i - 1] + 0.5 * fext(x[i - 1]) * dtm
+        x[i] = x[i - 1] + 0.5 * v[i] * dt
+        v[i] = c1 * v[i] + c3m * r[i - 1]
+        x[i] = x[i] + 0.5 * v[i] * dt
+        v[i] = v[i] + 0.5 * fext(x[i]) * dtm
     return x, v
 
 
@@ -63,9 +71,9 @@ def _ld_od_core(
     rng: np.random.Generator,
 ) -> Tuple[NDArray[np.float64], NDArray[np.float64]]:
     """
-    Simulate one-dimensional, overdamped Langevin dynamics in an external potential.
+    Simulate one-dimensional Langevin dynamics in the limit of strong damping.
 
-    Numba-optimized core function.
+    Numba-optimized core function implementing the Euler-Maruyama method.
 
     :param nsteps: The number of simulation steps.
     :param gamma: The damping constant.

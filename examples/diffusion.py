@@ -40,7 +40,7 @@ def _(FIGSIZE, mo, mvdlib, np, plt):
             ylabel=None,
             mean=True,
             yscale=None,
-            linthresh=1.0e-1,
+            linthresh=1.0e-2,
         ):
             sample_style = {"color": "C1", "alpha": 0.5}
             mean_style = {"color": "C2", "label": "sample mean"}
@@ -67,6 +67,7 @@ def _(FIGSIZE, mo, mvdlib, np, plt):
                 ax.set_yscale("symlog", linthresh=linthresh)
             else:
                 ax.set_yscale(yscale)
+
 
     class GRWData:
         def __init__(
@@ -105,6 +106,7 @@ def _(FIGSIZE, mo, mvdlib, np, plt):
             )
 
             return mo.as_html(fig)
+
 
     mo.md(
         rf"""
@@ -211,6 +213,7 @@ def _(FIGSIZE, Samples, mo, mvdlib, np, plt):
 
             return mo.as_html(fig)
 
+
     mo.md(
         rf"""
         The Langevin equation is a stochastic differential equation that describes how a system evolves when subjected to both deterministic and fluctuating (random) forces.
@@ -288,7 +291,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(FIGSIZE, Samples, mo, mvdlib, np, numba, plt):
     class LDHOData:
         def __init__(
@@ -316,7 +319,7 @@ def _(FIGSIZE, Samples, mo, mvdlib, np, numba, plt):
             omgr_sq = omg0**2 - (kt / (2.0 * mass * diff)) ** 2
             omgr = np.sqrt(np.abs(omgr_sq))
 
-            nsteps = 50 * ncx
+            nsteps = 100 * ncx
 
             # x, v
             t = np.arange(nsteps + 1) * dt
@@ -353,7 +356,9 @@ def _(FIGSIZE, Samples, mo, mvdlib, np, numba, plt):
                     omgr * t
                 )
             else:
-                ref *= np.cos(omgr * t) - gamma / (2.0 * mass * omgr) * np.sin(omgr * t)
+                ref *= np.cos(omgr * t) - gamma / (2.0 * mass * omgr) * np.sin(
+                    omgr * t
+                )
             self.cv = Samples(tcv, ref)
 
             # Laplace transform of VACF
@@ -406,6 +411,7 @@ def _(FIGSIZE, Samples, mo, mvdlib, np, numba, plt):
 
             return mo.as_html(fig)
 
+
     mo.md(
         rf"""
         The Langevin equation can be extended to describe diffusion in a harmonic potential.
@@ -456,14 +462,14 @@ def _(FIGSIZE, Samples, mo, mvdlib, np, numba, plt):
         $$
 
         ### Strong Damping
-        
-        {LDHOData(ncx=8000, ncv=500, cfcscale=0.1).plot()}
-        
+
+        {LDHOData(ncx=5000, ncv=500, cfcscale=0.1, dt=0.002).plot()}
+
         ### Critical Damping
         {LDHOData(cfcscale=1.0).plot()}
-        
+
         ### Weak Damping
-        {LDHOData(ncx=2000, ncv=2000, dt=0.0002, cfcscale=10.0).plot()}
+        {LDHOData(ncx=4000, ncv=4000, dt=0.0001, cfcscale=10.0).plot()}
         """
     )
     return (LDHOData,)
@@ -471,8 +477,6 @@ def _(FIGSIZE, Samples, mo, mvdlib, np, numba, plt):
 
 @app.cell(hide_code=True)
 def _():
-    from types import SimpleNamespace
-
     import marimo as mo
     import matplotlib.pyplot as plt
     import numba
@@ -485,7 +489,7 @@ def _():
 
     plt.style.use("mvdlib.style.default")
     FIGSIZE = mvdlib.plots.FigSize()
-    return FIGSIZE, SimpleNamespace, mo, mvdlib, np, numba, plt
+    return FIGSIZE, mo, mvdlib, np, numba, plt
 
 
 if __name__ == "__main__":
