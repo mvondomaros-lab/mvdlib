@@ -6,9 +6,68 @@ import numba
 import numpy as np
 
 if typing.TYPE_CHECKING:
-    from typing import Optional, Tuple
+    from typing import Collection, Optional, Tuple
 
     from numpy.typing import NDArray
+
+
+class USPTCFAnalysis:
+    def __init__(
+        self,
+        trajectories: Collection[NDArray[np.float64]],
+        nc: int,
+        n0: int,
+        dt: float = 1.0,
+    ):
+        """
+        Analyze the position time correlation functions of harmonically restrained MD simulations.
+
+        :param trajectories: Input trajectories.
+        :param nc: The correlation length.
+        :param n0: The number of time steps, after which the PTCFs have converged to zero.
+        :param dt: The simulation time step.
+
+        :raises ValueError: For erroneous inputs.
+        """
+        import collections
+
+        from scipy.integrate import cumulative_simpson
+
+        import mvdlib.stats
+
+        # Make sure that x is a collection of arrays.
+        if not (
+            isinstance(trajectories, collections.abc.Collection)
+            and all(isinstance(x, np.ndarray) for x in trajectories)
+        ):
+            raise ValueError("trajectories must be a collection of numpy arrays")
+
+        # Make sure that the correlation length does not exceed the number of time steps.
+        for x in trajectories:
+            if x.size < nc:
+                raise ValueError("nc exceeds the number of timesteps")
+
+        # Ensure that n0 < nc.
+        if n0 >= nc:
+            raise ValueError("n0 must be smaller than nc")
+
+        # Compute the time correlation functions and their integrals.
+        self.t = np.arange(nc) * dt
+        c = [mvdlib.stats.tcf(x, nc=nc, shift=True, scale=True) for x in trajectories]
+        self.c = np.mean(c, axis=0)
+        c_int = [cumulative_simpson(y=c, x=self.t, initial=0.0) for c in c]
+        self.c_int = np.mean(c_int, axis=0)
+
+        # Determine the correlation time.
+        taux = [np.mean(c_int[n0:]) for c_int in c_int]
+        self.taux = np.mean(taux)
+
+        # Compute the diffusion coefficient.
+        varx = [np.var(x) for x in trajectories]
+        diff = np.divide(varx, taux)
+        self.x = np.mean(trajectories)
+        self.diff = np.mean(diff)
+        self.sem = np.std(diff, ddof=1) / np.sqrt(len(diff))
 
 
 @numba.jit(nopython=True, fastmath=True)

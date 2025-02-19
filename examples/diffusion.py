@@ -311,7 +311,7 @@ def _(FIGSIZE, Samples, mo, mvdlib, np, numba, plt):
 
             gamma = kt / diff
             tau = mass / gamma
-            cfc = mass * (kt / (2.0 * mass * diff)) ** 2
+            cfc = mass * (gamma / (2.0 * mass)) ** 2
             fc = cfc * cfcscale
 
             omg0_sq = fc / mass
