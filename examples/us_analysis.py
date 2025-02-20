@@ -107,7 +107,7 @@ def _(FIGSIZE, dt, mo, mvdlib, plt, samples):
         ax.plot(ptcf_analysis.t, ptcf_analysis.c_int, color="C1")
         ax.legend()
         ax.set_xlabel(r"$t\ /\ \mathsf{ps}$")
-        ax.set_ylabel(r"$\int_0^tC_x(t^\prime)dt^\prime$")
+        ax.set_ylabel(r"$\int_0^tC_x(t^\prime)dt^\prime\ /\ \mathsf{ps}$")
         ax.yaxis.set_major_locator(plt.MaxNLocator(5))
 
         return mo.as_html(fig)
@@ -136,12 +136,12 @@ def _(FIGSIZE, dt, mo, mvdlib, plt, samples):
             $$
             \tau_x = \int_0^\infty C_x(t) dt
             $$
-            
+
         - `USPTCFAnalysis` determines the correlation time $\tau_x$ by averaging over the cumulative integral of the position time correlation function for times $t>t_0$, where $t_0$ is the time after which the PTCF is zero. Make sure that this is indeed the plateau value of the integral. Here, we obtain $\tau_x = {ptcf_analysis.taux:.3g}\ \mathsf{{ps}}$.
-        
+
         - The position-dependent diffusion coefficient is computed as follows.
             Here, we obtain $D = ({ptcf_analysis.diff:.3g} \pm {ptcf_analysis.sem * 1.96:.3g})\ \mathsf{{nm^2\,ps^{{-1}}}}$ at $x = {ptcf_analysis.x:.3g}\ \mathsf{{nm}}$.
-        
+
             $$
             D(\left<x\right>) = \frac{{\tau_x}}{{\langle\left(\delta x\right)^2\rangle}}
             $$ 
@@ -162,7 +162,7 @@ def _(FIGSIZE, dt, mo, mvdlib, plt, samples):
         ax.axhline(0.0, color="C0", ls="--")
         ax.plot(vtcf_analysis.t, vtcf_analysis.c, color="C1")
         ax.set_xlabel(r"$t\ /\ \mathsf{ps}$")
-        ax.set_ylabel(r"$C_v(t)$")
+        ax.set_ylabel(r"$C_v(t)\ /\ \mathsf{nm^2\,ps^{-2}}$")
         ax.xaxis.set_major_locator(plt.MaxNLocator(5))
         ax.yaxis.set_major_locator(plt.MaxNLocator(5))
 
