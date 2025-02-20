@@ -270,15 +270,6 @@ def _(FIGSIZE, Samples, mo, mvdlib, np, plt):
         $$
 
 
-        Langevin dynamics can be simulated using finite differences.
-
-        $$
-        \begin{{align}}
-            v_{{n+1}} &= v_n - \theta v_{{n}} \Delta{{t}} + \sigma g_n\sqrt{{\Delta t}} \\
-            x_{{n+1}} &= x_n + v_n \Delta{{t}}
-        \end{{align}}
-        $$
-
         {LDData().plot()}
         """
     )
@@ -449,15 +440,6 @@ def _(FIGSIZE, Samples, mo, mvdlib, np, numba, plt):
         \begin{{align}}
         \left<\left[x(t)-x(0)\right]^2\right> &= 2\left<x^2\right> - \left<x(t)x(0)\right> \\
         \left<v(t)v(0)\right> &= \frac{{d^2}}{{dt^2}}\left<x(t)x(0)\right>\\
-        \end{{align}}
-        $$
-
-        While Langevin dynamics in a potential is not an OU process anymore, it can be integrated similarly.
-
-        $$
-        \begin{{align}}
-            v_{{n+1}} &= v_n + (-\omega_0^2x_n -\theta v_{{n}}) \Delta{{t}} + \sigma g_n \sqrt{{\Delta t}} \\
-            x_{{n+1}} &= x_n + v_n \Delta{{t}}
         \end{{align}}
         $$
 
