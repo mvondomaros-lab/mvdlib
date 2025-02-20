@@ -212,7 +212,7 @@ def _(FIGSIZE, dt, mo, mvdlib, plt, samples):
             \end{{align}}
         $$
 
-        - The position-dependent diffusivity $D(\langle z \rangle)$ is the limit of $D(s)$ as $s\to 0$. Unfortuantely, $D(s)$ diverges as $s\to 0$ and must be extrapolated from the range of $s$-values where it is well-behaved, instead. `USVTCFAnalysis` fits a sixth-order polynomial to $D(s)$ for $s$-values with a low curvature (deviating from median curvature by less then $5\ \%$). Users should carefully check that this extrapolation is meaningful.
+        - The position-dependent diffusivity $D(\langle z \rangle)$ is the limit of $D(s)$ as $s\to 0$. Unfortuantely, $D(s)$ diverges as $s\to 0$ and must be extrapolated from the range of $s$-values where it is well-behaved, instead. `USVTCFAnalysis` fits a fourth-order polynomial to $D(s)$ for $s$-values with a low curvature (deviating from median curvature by less then $5\ \%$). Users should carefully check that this extrapolation is meaningful.
 
         - Here, we obtain $D = ({vtcf_analysis.diff:.3g} \pm {vtcf_analysis.sem * 1.96:.3g})\ \mathsf{{nm^2\,ps^{{-1}}}}$ at $x = {vtcf_analysis.x:.3g}\ \mathsf{{nm}}$.
 

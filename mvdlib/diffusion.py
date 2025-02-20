@@ -31,6 +31,7 @@ class USVTCFAnalysis:
         import mvdlib.stats
 
         # Verify the trajectory input.
+        # TODO: Handle arrays of different lengths.
         try:
             for x, v in trajectories:
                 if (
@@ -89,7 +90,7 @@ class USVTCFAnalysis:
         mask = np.abs((ds_grad2 - np.median(ds_grad2)) / ds_grad2) < 0.05
         s_mask = s[mask]
         ds_mask = ds[mask]
-        c = np.polyfit(s_mask, ds_mask, 6)
+        c = np.polyfit(s_mask, ds_mask, 4)
         return c[-1], np.poly1d(c)(s)
 
 
@@ -116,6 +117,7 @@ class USPTCFAnalysis:
         import mvdlib.stats
 
         # Verify the trajectory input.
+        # TODO: Handle arrays of different lengths.
         try:
             for x in trajectories:
                 if not isinstance(x, np.ndarray) or x.ndim != 1:
