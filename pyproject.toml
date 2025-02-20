@@ -1,6 +1,6 @@
 [project]
 name = "mvdlib"
-version = "0.1.0"
+version = "0.2.0"
 description = "A loose collection of library functions. Acts as an incubator for future projects. Use at your own risk."
 readme = "README.md"
 requires-python = ">=3.13"
@@ -17,4 +17,10 @@ dev = [
     "ruff>=0.9.3",
     "pytest>=8.3.4",
     "marimo>=0.10.16",
+]
+
+[build-system]
+requires = [
+    "setuptools>=60",
+    "setuptools-scm>=8.0",
 ]
