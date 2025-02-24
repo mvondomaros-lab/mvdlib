@@ -78,7 +78,7 @@ def _process_signal(
         # This syntax creates a copy.
         x = x - np.mean(x)
     if scale:
-        std = np.std(x)
+        std = np.std(x, ddof=1)
         if std > 0.0:
             # This syntax creates a copy.
             x = x / std
