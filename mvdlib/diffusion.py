@@ -6,149 +6,45 @@ import numba
 import numpy as np
 
 if typing.TYPE_CHECKING:
-    from typing import Collection, Optional, Sequence, Tuple
+    from typing import Optional, Tuple
 
     from numpy.typing import NDArray
 
 
-class USVTCFAnalysis:
+class USPACFAnalysis:
     def __init__(
         self,
-        trajectories: Collection[Sequence[NDArray[np.float64], NDArray[np.float64]]],
-        nc: int,
-        dt: float = 0.001,
-    ):
-        """
-        Analyze the velocity time correlation functions of harmonically restrained MD simulations.
-
-        :param trajectories: Input trajectories (positions, velocities).
-        :param nc: The correlation length.
-        :param dt: The simulation time step.
-
-        :raises ValueError: For erroneous trajectory inputs.
-        """
-        import mvdlib.helpers
-        import mvdlib.stats
-
-        # Verify the trajectory input.
-        # TODO: Handle arrays of different lengths.
-        try:
-            for x, v in trajectories:
-                if (
-                    not isinstance(x, np.ndarray)
-                    or not isinstance(v, np.ndarray)
-                    or x.ndim != 1
-                    or x.shape != v.shape
-                ):
-                    raise ValueError(
-                        "positions and velocities must be one-dimensional arrays of equal length"
-                    )
-        except TypeError:
-            raise ValueError(
-                "trajectories must be a collection of (position, velocity) sequences."
-            )
-
-        self.t = np.arange(nc) * dt
-        ds = 1.0 / (nc * dt)
-        smax = 1.0 / (2.0 * dt)
-        self.s = np.arange(ds, smax, ds)
-        self.x = np.mean([x for x, _ in trajectories])
-
-        c_list = []
-        ds_list = []
-        ds_fit_list = []
-        diff_list = []
-        for x, v in trajectories:
-            c = mvdlib.stats.tcf(v, nc=nc, shift=False, scale=False)
-            lpl = mvdlib.helpers.laplace(c, self.t, self.s)
-            varx = np.var(x, ddof=1)
-            varv = np.var(v, ddof=1)
-            ds = -(
-                lpl
-                * varx
-                * varv
-                / (lpl * (self.s * varx + varv / self.s) - varx * varv)
-            )
-            diff, ds_fit = USVTCFAnalysis._get_ds_fit(self.s, ds)
-
-            c_list.append(c)
-            ds_list.append(ds)
-            ds_fit_list.append(ds_fit)
-            diff_list.append(diff)
-
-        self.c = np.mean(c_list, axis=0)
-        self.ds = np.mean(ds_list, axis=0)
-        self.ds_fit = np.mean(ds_fit_list, axis=0)
-        self.diff = np.mean(diff_list)
-        self.sem = np.std(diff_list, ddof=1) / np.sqrt(len(diff_list))
-
-    @staticmethod
-    def _get_ds_fit(s, ds):
-        # Restrict the fit to regions of small curvature.
-        ds_grad = np.gradient(ds, s)
-        ds_grad2 = np.gradient(ds_grad, s)
-        mask = np.abs((ds_grad2 - np.median(ds_grad2)) / ds_grad2) < 0.05
-        s_mask = s[mask]
-        ds_mask = ds[mask]
-        c = np.polyfit(s_mask, ds_mask, 4)
-        return c[-1], np.poly1d(c)(s)
-
-
-class USPTCFAnalysis:
-    def __init__(
-        self,
-        trajectories: Collection[NDArray[np.float64]],
-        nc: int,
-        n0: int,
+        trajectories: NDArray[np.float64],
         dt: float = 1.0,
+        c: float = 10.0,
     ):
         """
-        Analyze the position time correlation functions of harmonically restrained MD simulations.
+        Analyze the position autocorrelation functions of harmonically restrained MD simulations.
 
         :param trajectories: Input trajectories (positions).
-        :param nc: The correlation length.
-        :param n0: The number of time steps, after which the PTCFs have converged to zero.
         :param dt: The simulation time step.
+        :param c: The constant c used in the windowing procedure.
 
         :raises ValueError: For erroneous trajectory inputs.
         """
-        from scipy.integrate import cumulative_simpson
-
         import mvdlib.stats
 
-        # Verify the trajectory input.
-        # TODO: Handle arrays of different lengths.
-        try:
-            for x in trajectories:
-                if not isinstance(x, np.ndarray) or x.ndim != 1:
-                    raise ValueError("positions must be one-dimensional arrays")
-        except TypeError:
-            raise ValueError("trajectories must be a collection of position arrays.")
+        # Compute the ACF.
+        acfs = [mvdlib.stats.acf(x) for x in np.atleast_2d(trajectories)]
+        self.acf = np.mean(acfs, axis=0)
+        self.t = np.arange(self.acf.size) * dt
 
-        self.t = np.arange(nc) * dt
-        self.x = np.mean(trajectories)
+        # Compute the autocorrelation time.
+        taus = np.cumsum(self.acf) - 0.5
+        self.acfint = taus * dt
+        cutoff = np.arange(self.acfint.size) <= c * np.abs(taus)
+        cutoff = np.argmin(cutoff) if np.any(cutoff) else -1
+        self.cutoff = cutoff * dt
+        self.tau = self.acfint[cutoff]
 
-        c_list = []
-        c_int_list = []
-        taux_list = []
-        diff_list = []
-        for x in trajectories:
-            c = mvdlib.stats.tcf(x, nc=nc, shift=True, scale=True)
-            c_int = cumulative_simpson(y=c, x=self.t, initial=0.0)
-            taux = np.mean(c_int[n0:])
-            varx = np.var(x, ddof=1)
-            diff = varx / taux
-
-            c_list.append(c)
-            c_int_list.append(c_int)
-            taux_list.append(taux)
-            diff_list.append(diff)
-
-        self.c = np.mean(c_list, axis=0)
-        self.c_int = np.mean(c_int_list, axis=0)
-        self.taux = np.mean(taux_list)
-        self.diff = np.mean(diff_list)
-        self.sem = np.std(diff_list, ddof=1) / np.sqrt(len(diff_list))
+        # Compute the diffusivity at the average position.
+        self.position = np.mean(trajectories)
+        self.diffusivity = np.var(trajectories, ddof=1) / self.tau
 
 
 @numba.jit(nopython=True, fastmath=True)

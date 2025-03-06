@@ -169,3 +169,10 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+examples/acetone
+examples/water
+examples/acetone_analysis.py
+examples/acetone_analysis2.py
+examples/water_analysis.py
+examples/workflow.py
+examples/us_analysis.py

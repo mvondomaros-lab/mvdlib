@@ -10,6 +10,7 @@ dependencies = [
     "scipy>=1.15",
     "matplotlib>=3.10",
     "seaborn>=0.13.2",
+    "statsmodels>=0.14.4",
 ]
 
 [dependency-groups]
