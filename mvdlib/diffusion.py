@@ -69,7 +69,7 @@ def _ld_od_core(
     dt: float,
     fext: numba.types.Callable,
     rng: np.random.Generator,
-) -> Tuple[NDArray[np.float64], NDArray[np.float64]]:
+) -> NDArray[np.float64]:
     """
     Simulate one-dimensional Langevin dynamics in the limit of strong damping.
 
@@ -83,16 +83,15 @@ def _ld_od_core(
     :param fext: The force exerted by the external potential.
     :param rng: A random number generator.
 
-    :return: The simulated positions and velocities.
+    :return: The simulated positions.
     """
     x = np.empty(nsteps + 1, dtype=np.float64)
-    v = np.empty(nsteps + 1, dtype=np.float64)
     x[0] = x0
     r = rng.normal(loc=0.0, scale=np.sqrt(2.0 * kt * dt / gamma), size=nsteps)
     dtg = dt / gamma
     for i in range(1, nsteps + 1):
         x[i] = x[i - 1] + fext(x[i - 1]) * dtg + r[i - 1]
-    return x, v
+    return x
 
 
 @numba.jit(nopython=True)
@@ -143,7 +142,7 @@ def ld(
     x0: float = 0.0,
     v0: float = 0.0,
     dt: float = 1.0,
-    od: bool = False,
+    overdamped: bool = False,
     fext: Optional[numba.types.Callable] = None,
     rng: Optional[np.random.Generator] = None,
 ) -> Tuple[NDArray[np.float64], NDArray[np.float64]] | NDArray[np.float64]:
@@ -157,7 +156,7 @@ def ld(
     :param x0: The initial position.
     :param v0: The initial velocity.
     :param dt: The time step.
-    :param od: Simulate in the high-friction limit?
+    :param overdamped: Simulate in the high-friction limit?
     :param fext: A function returning an external force. Defaults to `None`.
     :param rng: A random number generator. Defaults to `np.random.default_rng()`.
 
@@ -173,7 +172,7 @@ def ld(
 
     # Simulate Langevin dynamics in an external potential.
     gamma = kt / diff
-    if od:
+    if overdamped:
         x = _ld_od_core(
             nsteps=nsteps,
             gamma=gamma,
@@ -296,3 +295,73 @@ def msd(
     tcf = tcf(x, maxsteps, shift=False)
 
     return mssq - 2.0 * tcf
+
+
+@numba.jit(nopython=True, fastmath=True)
+def interval_mask(x: NDArray[np.float64], xmin: float, xmax: float) -> NDArray[np.int8]:
+    """
+    Convert an array into a binary mask indicating which entries lie in [xmin, xmax).
+
+    :param x: Input array.
+    :param xmin: Lower bound.
+    :param xmax: Upper bound.
+    :returns: Binary mask where 1 indicates x[i] is in [xmin, xmax).
+    """
+    # Vectorized comparison yields a boolean array; cast to int8 in one go.
+    return ((x >= xmin) & (x < xmax)).astype(np.int8)
+
+
+@numba.jit(nopython=True, fastmath=True)
+def interval_residence_times(
+    x: NDArray[np.float64], xmin: float, xmax: float, dt: float
+) -> NDArray[np.float64]:
+    """
+    Compute the durations that a particle spends continuously inside the spatial interval [xmin, xmax),
+    given its trajectory `x` sampled at uniform time intervals `dt`.
+
+    If the trajectory starts inside the bin, we count from t=0 until first exit.
+    If it ends inside, we count until the last sample.
+
+    :param x: Particle positions.
+    :param xmin: Lower bound.
+    :param xmax: Upper bound.
+    :param dt: Time step between consecutive positions.
+    :returns: Residence times.
+    """
+    n = x.size
+    mask = interval_mask(x, xmin, xmax)
+    diff = np.diff(mask)
+    times = []
+
+    # If the particle is initially in the bin, assume that it has entered just before the simulation.
+    i0 = -1
+
+    for i in range(n - 1):
+        if diff[i] == 1:
+            # Particle enters at i + 1.
+            i0 = i
+        elif diff[i] == -1:
+            # Particle leaves at i + 1.
+            times.append((i - i0) * dt)
+
+    # If the particle has not left the bin by the end of the trajectory, assume that it will leave in the next step.
+    if mask[-1] == 1:
+        times.append((n - 1 - i0) * dt)
+
+    return np.array(times)
+
+def interval_diffusivity(
+    x: NDArray[np.float64], xmin: float, xmax: float, dt: float
+) -> float:
+    """
+    Compute the diffusivity of a particle in a spatial interval [xmin, xmax) with constant potential.
+
+    :param x: Particle trajectory.
+    :param xmin: Lower bound.
+    :param xmax: Upper bound.
+    :param dt: Time step between consecutive positions.
+    :returns: Diffusivity.
+    """
+    times = interval_residence_times(x, xmin, xmax, dt)
+    tau = np.mean(times)
+    return (xmax-xmin)**2/(12.0*tau)
