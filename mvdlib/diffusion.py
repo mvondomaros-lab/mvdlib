@@ -11,42 +11,6 @@ if typing.TYPE_CHECKING:
     from numpy.typing import NDArray
 
 
-class USPACFAnalysis:
-    def __init__(
-        self,
-        trajectories: NDArray[np.float64],
-        dt: float = 1.0,
-        c: float = 10.0,
-    ):
-        """
-        Analyze the position autocorrelation functions of harmonically restrained MD simulations.
-
-        :param trajectories: Input trajectories (positions).
-        :param dt: The simulation time step.
-        :param c: The constant c used in the windowing procedure.
-
-        :raises ValueError: For erroneous trajectory inputs.
-        """
-        import mvdlib.stats
-
-        # Compute the ACF.
-        acfs = [mvdlib.stats.acf(x) for x in np.atleast_2d(trajectories)]
-        self.acf = np.mean(acfs, axis=0)
-        self.t = np.arange(self.acf.size) * dt
-
-        # Compute the autocorrelation time.
-        taus = np.cumsum(self.acf) - 0.5
-        self.acfint = taus * dt
-        cutoff = np.arange(self.acfint.size) <= c * np.abs(taus)
-        cutoff = np.argmin(cutoff) if np.any(cutoff) else -1
-        self.cutoff = cutoff * dt
-        self.tau = self.acfint[cutoff]
-
-        # Compute the diffusivity at the average position.
-        self.position = np.mean(trajectories)
-        self.diffusivity = np.var(trajectories, ddof=1) / self.tau
-
-
 @numba.jit(nopython=True, fastmath=True)
 def _ld_core(
     nsteps: int,
