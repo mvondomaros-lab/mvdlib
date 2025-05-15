@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.10.16"
+__generated_with = "0.11.2"
 app = marimo.App(width="full")
 
 
@@ -406,11 +406,6 @@ def _(FIGSIZE, mo, mvdlib, np, plt):
         """
     )
     return (kde_demo,)
-
-
-@app.cell
-def _():
-    return
 
 
 if __name__ == "__main__":
