@@ -5,6 +5,8 @@ import typing
 import numba
 import numpy as np
 
+from .stats import sem_corr
+
 if typing.TYPE_CHECKING:
     from typing import Callable, Optional, Tuple
 
@@ -312,6 +314,40 @@ def interval_survival_probability(
     return survival / norm
 
 
+def interval_survival_times(
+    x: NDArray[np.float64], xmin: float, xmax: float, dt: float
+) -> NDArray[np.float64]:
+    """
+    Compute the survival times of a particle in an interval [xmin, xmax).
+
+    The survival time is defined as the time the particle remains in the interval, given that it is initially in the
+    interval.
+
+    :param x: The input array.
+    :param xmin: The lower bound.
+    :param xmax: The upper bound.
+    :param dt: The time step.
+    :returns: The survival times.
+    """
+    # Compute binary mask indicating which entries lie in [xmin, xmax).
+    mask = interval_mask(x, xmin, xmax)
+
+    # Zero-pad both sides, so the ends are handled correctly.
+    padded = np.pad(mask, (1, 1))
+
+    # Compute run lengths (times spent in the interval).
+    diff = np.diff(padded)
+    starts = np.where(diff == 1)[0]
+    ends = np.where(diff == -1)[0]
+    lengths = ends - starts
+
+    times = []
+    for length in lengths:
+        times.extend(range(length, 0, -1))
+
+    return np.array(times) * dt
+
+
 def interval_residence_time(
     x: NDArray[np.float64], xmin: float, xmax: float, dt: float
 ) -> float:
@@ -334,7 +370,7 @@ def interval_residence_time(
 
 def interval_diffusivity(
     x: NDArray[np.float64], xmin: float, xmax: float, dt: float
-) -> float:
+) -> Tuple[float, float]:
     """
     Compute the mean diffusivity of a particle in an interval [xmin, xmax).
 
@@ -348,7 +384,13 @@ def interval_diffusivity(
     :param xmin: The lower bound.
     :param xmax: The upper bound.
     :param dt: The time step.
-    :returns: The survival probabilities up to the maximum residence time.
+    :returns: The interval diffusivity and the standard error of the mean.
     """
-    residence = interval_residence_time(x, xmin, xmax, dt)
-    return (xmax - xmin) ** 2 / (12.0 * residence)
+    #residence = interval_residence_time(x, xmin, xmax, dt)
+    times = interval_survival_times(x, xmin, xmax, dt)
+    residence = np.mean(times)
+    residence_sem = sem_corr(times)
+    # noinspection PyTypeChecker
+    diff = (xmax - xmin) ** 2 / (12.0 * residence)
+    diff_sem = (xmax - xmin) ** 2 / (12.0 * residence**2)*residence_sem
+    return diff, diff_sem

@@ -28,6 +28,18 @@ def cabs2(
     return x.real * x.real + x.imag * x.imag
 
 
+def prevpow2(x: Union[int, float]) -> int:
+    """
+    Calculate the largest power of 2 smaller than or equal to the absolute value
+    of the given input.
+
+    :param x: The input number.
+    :return: The largest power of 2.
+    """
+    n = int(abs(x))
+    return 1 if n == 0 else 1 << n.bit_length() - 1
+
+
 def nextpow2(x: Union[int, float]) -> int:
     """
     Calculate the smallest power of 2 greater than or equal to the absolute value

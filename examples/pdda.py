@@ -1,12 +1,12 @@
 import marimo
 
-__generated_with = "0.11.2"
+__generated_with = "0.13.11"
 app = marimo.App(width="full")
 
 
 @app.cell(hide_code=True)
 def _(FIGSIZE, mo, mvdlib, np, plt, scipy):
-    NSTEPS = 5000000
+    NSTEPS = 10000000
     DT = 0.001
 
     MASS = 18.0
@@ -54,12 +54,12 @@ def _(FIGSIZE, mo, mvdlib, np, plt, scipy):
         {mo.as_html(plot_sample_free())}
         """
     )
-    return DIFF, DT, FRICTION, KT, MASS, NSTEPS, TEMP, plot_sample_free
+    return DIFF, DT, FRICTION, KT, MASS, NSTEPS
 
 
 @app.cell(hide_code=True)
 def _(DIFF, DT, FIGSIZE, FRICTION, KT, MASS, NSTEPS, mo, mvdlib, np, plt):
-    NSAMPLES = 50
+    NSAMPLES = 10
 
 
     def plot_msd_free():
@@ -114,7 +114,7 @@ def _(DIFF, DT, FIGSIZE, FRICTION, KT, MASS, NSTEPS, mo, mvdlib, np, plt):
         {mo.as_html(plot_msd_free())}
         """
     )
-    return NSAMPLES, plot_msd_free
+    return (NSAMPLES,)
 
 
 @app.cell(hide_code=True)
@@ -171,12 +171,7 @@ def _(FIGSIZE, mo, np, numba, plt):
         {mo.as_html(plot_force_potential_bounded())}
         """
     )
-    return (
-        FORCE_CONSTANT,
-        POTENTIAL_WIDTH,
-        force_bounded,
-        plot_force_potential_bounded,
-    )
+    return POTENTIAL_WIDTH, force_bounded
 
 
 @app.cell(hide_code=True)
@@ -225,7 +220,7 @@ def _(
         {mo.as_html(plot_sample_bounded())}
         """
     )
-    return (plot_sample_bounded,)
+    return
 
 
 @app.cell(hide_code=True)
@@ -294,7 +289,7 @@ def _(
         {mo.as_html(plot_msd_bounded())}
         """
     )
-    return (plot_msd_bounded,)
+    return
 
 
 @app.cell(hide_code=True)
@@ -330,7 +325,7 @@ def _(
         residence = mvdlib.diffusion.interval_residence_time(
             x, xmin=0.0, xmax=POTENTIAL_WIDTH, dt=DT
         )
-        diff = mvdlib.diffusion.interval_diffusivity(
+        diff, diff_sem = mvdlib.diffusion.interval_diffusivity(
             x, xmin=0.0, xmax=POTENTIAL_WIDTH, dt=DT
         )
         t = np.arange(survival.size) * DT
@@ -340,12 +335,15 @@ def _(
 
         ax.plot(t, survival, color="C1")
         ax.text(
-            1.0, 0.25, rf"$\tau = {residence:.2g}\ \mathsf{{ps}}$", va="center"
+            1.0,
+            0.25,
+            rf"$\tau = {residence:.2g}\ \mathsf{{ps}}$",
+            va="center",
         )
         ax.text(
             1.0,
             0.15,
-            rf"$D = {diff:.2g}\ \mathsf{{nm^2\ ps^{{-1}}}}$",
+            rf"$D = \left({diff:.2g}\pm {1.95 * diff_sem:.2g}\right)\ \mathsf{{nm^2\ ps^{{-1}}}}$",
             va="center",
         )
         ax.set_xlabel(r"$t\ /\ \mathsf{ps}$")
@@ -380,7 +378,7 @@ def _(
         {mo.as_html(plot_survival_bounded())}
         """
     )
-    return (plot_survival_bounded,)
+    return
 
 
 @app.cell(hide_code=True)
@@ -404,33 +402,36 @@ def _(
         rng = np.random.default_rng(42)
         bin_sizes = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 1.0, 1.5])
         diffs = []
+        diff_sems = []
         for bin_size in bin_sizes:
-            diffs.append([])
-            for n in range(NSAMPLES):
-                x, _ = mvdlib.diffusion.ld(
-                    force=force_bounded,
-                    friction=FRICTION,
-                    nsteps=NSTEPS,
-                    dt=DT,
-                    mass=MASS,
-                    kt=KT,
-                    x0=0.5 * POTENTIAL_WIDTH,
-                    rng=rng,
-                )
-                diff = mvdlib.diffusion.interval_diffusivity(
-                    x,
-                    xmin=0.5 * (POTENTIAL_WIDTH - bin_size),
-                    xmax=0.5 * (POTENTIAL_WIDTH + bin_size),
-                    dt=DT,
-                )
-                diffs[-1].append(diff)
+            x, _ = mvdlib.diffusion.ld(
+                force=force_bounded,
+                friction=FRICTION,
+                nsteps=NSTEPS * NSAMPLES,
+                dt=DT,
+                mass=MASS,
+                kt=KT,
+                x0=0.5 * POTENTIAL_WIDTH,
+                rng=rng,
+            )
+            diff, diff_sem = mvdlib.diffusion.interval_diffusivity(
+                x,
+                xmin=0.5 * (POTENTIAL_WIDTH - bin_size),
+                xmax=0.5 * (POTENTIAL_WIDTH + bin_size),
+                dt=DT,
+            )
+            diffs.append(diff)
+            diff_sems.append(diff_sem)
 
         nrows, ncols = 1, 1
         fig, ax = plt.subplots(nrows, ncols, figsize=FIGSIZE(nrows, ncols))
 
-        ax.violinplot(diffs, showmeans=True, showextrema=True)
+        x = np.arange(len(bin_sizes))
+        ax.errorbar(
+            x, diffs, yerr=1.95 * np.array(diff_sems), ls="none", marker="."
+        )
         ax.set_xticks(
-            np.arange(len(bin_sizes)) + 1,
+            x,
             labels=[f"{bs:.2g}" for bs in bin_sizes],
             rotation=45,
         )
@@ -451,7 +452,7 @@ def _(
         {mo.as_html(plot_diffusivity_bounded())}
         """
     )
-    return (plot_diffusivity_bounded,)
+    return
 
 
 @app.cell(hide_code=True)
@@ -502,7 +503,7 @@ def _(FIGSIZE, FRICTION, KT, POTENTIAL_WIDTH, mo, np, numba, plt):
         {mo.as_html(plot_diff_profile())}
         """
     )
-    return FRICTION_SCALE, FRICTION_WIDTH, friction_peak, plot_diff_profile
+    return (friction_peak,)
 
 
 @app.cell(hide_code=True)
@@ -550,7 +551,7 @@ def _(
         {mo.as_html(plot_sample_peak())}
         """
     )
-    return (plot_sample_peak,)
+    return
 
 
 @app.cell(hide_code=True)
@@ -559,7 +560,6 @@ def _(
     FIGSIZE,
     KT,
     MASS,
-    NSAMPLES,
     NSTEPS,
     POTENTIAL_WIDTH,
     force_bounded,
@@ -572,37 +572,36 @@ def _(
     def plot_diff_profile_simulated():
         bins = np.linspace(0.0, POTENTIAL_WIDTH, 4, endpoint=True)
         diffs = []
+        diff_sems = []
         rng = np.random.default_rng(42)
-        for n in range(NSAMPLES):
-            diffs.append([])
-            for i in range(bins.size - 1):
-                xmin, xmax = bins[i], bins[i + 1]
-                x, _ = mvdlib.diffusion.ld(
-                    force=force_bounded,
-                    friction=friction_peak,
-                    nsteps=NSTEPS,
-                    dt=DT,
-                    mass=MASS,
-                    kt=KT,
-                    x0=0.0,
-                    rng=rng,
-                )
-                diff = mvdlib.diffusion.interval_diffusivity(
-                    x,
-                    xmin=xmin,
-                    xmax=xmax,
-                    dt=DT,
-                )
-                diffs[-1].append(diff)
+        for i in range(bins.size - 1):
+            xmin, xmax = bins[i], bins[i + 1]
+            x, _ = mvdlib.diffusion.ld(
+                force=force_bounded,
+                friction=friction_peak,
+                nsteps=NSTEPS,
+                dt=DT,
+                mass=MASS,
+                kt=KT,
+                x0=0.0,
+                rng=rng,
+            )
+            diff, diff_sem = mvdlib.diffusion.interval_diffusivity(
+                x,
+                xmin=xmin,
+                xmax=xmax,
+                dt=DT,
+            )
+            diffs.append(diff)
+            diff_sems.append(diff_sem)
 
         x_ref = np.linspace(-0.05 * POTENTIAL_WIDTH, 1.05 * POTENTIAL_WIDTH, 250)
         friction_ref = np.array([friction_peak(x) for x in x_ref])
         diff_ref = KT / friction_ref
 
         diffs = np.array(diffs)
+        diff_sems = np.array(diff_sems)
         diff_x = 0.5 * (bins[1:] + bins[:-1])
-        diff_mean = np.mean(diffs, axis=0)
-        diff_std = np.std(diffs, ddof=1)
 
         nrows = 1
         ncols = 1
@@ -613,7 +612,7 @@ def _(
         ax.plot(x_ref, diff_ref, color="C0", ls="--", label="Input")
 
         ax.errorbar(
-            x=diff_x, y=diff_mean, yerr=1.95 * diff_std, color="C1", marker="."
+            x=diff_x, y=diffs, yerr=1.95 * diff_sems, color="C1", marker="."
         )
 
         ax.set_xlabel(r"$x\ /\ \mathsf{nm}$")
@@ -635,7 +634,7 @@ def _(
         {mo.as_html(plot_diff_profile_simulated())}
         """
     )
-    return (plot_diff_profile_simulated,)
+    return
 
 
 @app.cell(hide_code=True)

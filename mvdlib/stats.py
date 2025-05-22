@@ -5,6 +5,8 @@ import typing
 import numba
 import numpy as np
 
+from .helpers import prevpow2
+
 if typing.TYPE_CHECKING:
     from typing import Optional
 
@@ -109,3 +111,79 @@ def tcf(
     lags = np.arange(x.size, x.size - c.size, -1)
     c /= lags
     return c
+
+
+def sem(x: NDArray[np.float64]) -> np.float64:
+    """Compute the standard error of the mean (SEM) of uncorrelated data."""
+    n = x.size
+    return np.std(x) / np.sqrt(n)
+
+
+def sem_corr(x: NDArray[np.float64]) -> np.float64:
+    """
+    Compute the standard error of the mean (SEM) of correlated data.
+
+    Use the automated blocking method proposed by Jonsson (https://doi.org/10.1103/PhysRevE.98.043304). This is an
+    adaptation of their code.
+    """
+    # Truncate the data to a power of 2.
+    n = prevpow2(x.size)
+    d = int(np.log2(n))
+    x = x[:n]
+
+    mu = np.mean(x)
+    s, gamma = np.zeros(d), np.zeros(d)
+    for i in np.arange(0, d):
+        # Estimate the autocovariance and variance of x.
+        gamma[i] = sum((x[: n - 1] - mu) * (x[1:] - mu)) / n
+        s[i] = np.var(x)
+        # Perform a blocking transformation.
+        x = 0.5 * (x[0::2] + x[1::2])
+        n = x.size
+
+    # Compute m.
+    m = (np.cumsum(((gamma / s) ** 2 * 2 ** np.arange(1, d + 1)[::-1])[::-1]))[::-1]
+
+    # Magic numbers from the paper.
+    q = np.array(
+        [
+            6.634897,
+            9.210340,
+            11.344867,
+            13.276704,
+            15.086272,
+            16.811894,
+            18.475307,
+            20.090235,
+            21.665994,
+            23.209251,
+            24.724970,
+            26.216967,
+            27.688250,
+            29.141238,
+            30.577914,
+            31.999927,
+            33.408664,
+            34.805306,
+            36.190869,
+            37.566235,
+            38.932173,
+            40.289360,
+            41.638398,
+            42.979820,
+            44.314105,
+            45.641683,
+            46.962942,
+            48.278236,
+            49.587884,
+            50.892181,
+        ]
+    )
+
+    # Determine when we should have stopped blocking.
+    k = 0
+    while k < d and m[k] >= q[k]:
+        k += 1
+    if k >= d - 1:
+        raise ValueError("need more data for SEM estimation")
+    return np.sqrt(s[k] / 2 ** (d - k))
