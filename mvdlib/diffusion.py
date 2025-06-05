@@ -246,7 +246,7 @@ def msd(
     maxsteps = maxsteps or x.size
 
     if box is not None:
-        unwrap(x, box)
+        x = unwrap(x, box)
 
     mssq = _mssq(x, maxsteps)
     tcf = tcf(x, maxsteps, shift=False)
@@ -386,11 +386,11 @@ def interval_diffusivity(
     :param dt: The time step.
     :returns: The interval diffusivity and the standard error of the mean.
     """
-    #residence = interval_residence_time(x, xmin, xmax, dt)
+    # residence = interval_residence_time(x, xmin, xmax, dt)
     times = interval_survival_times(x, xmin, xmax, dt)
     residence = np.mean(times)
     residence_sem = sem_corr(times)
     # noinspection PyTypeChecker
     diff = (xmax - xmin) ** 2 / (12.0 * residence)
-    diff_sem = (xmax - xmin) ** 2 / (12.0 * residence**2)*residence_sem
+    diff_sem = (xmax - xmin) ** 2 / (12.0 * residence**2) * residence_sem
     return diff, diff_sem

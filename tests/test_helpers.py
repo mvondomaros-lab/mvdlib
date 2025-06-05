@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-import mvdlib.helpers
 from mvdlib.helpers import cabs2, nextpow2, unwrap
 
 
@@ -75,5 +74,5 @@ def test_nextpow2(x: Union[int, float], expected: int) -> None:
 )
 def test_unwrap(x: NDArray, box: float, expected: NDArray) -> None:
     """Test the trajectory unwrapping function."""
-    unwrap(x, box)
+    x = unwrap(x, box)
     assert x == pytest.approx(expected)
