@@ -53,15 +53,16 @@ def nextpow2(x: Union[int, float]) -> int:
 
 
 @numba.jit(nopython=True, fastmath=True)
-def unwrap(x: NDArray[np.float64], box: float) -> None:
+def unwrap(x: NDArray[np.float64], box: float) -> NDArray[np.float64]:
     """
     Remove jumps across periodic boundaries between consecutive elements of the input array.
-
-    Operates in place.
 
     :param x: The input array.
     :param box: The periodic box length.
     """
+    y = np.empty_like(x)
+    y[0] = x[0]
     for i in range(1, x.size):
-        dx = x[i] - x[i - 1]
-        x[i] -= np.round(dx / box) * box
+        dx = x[i] - y[i - 1]
+        y[i] = x[i] - np.round(dx / box) * box
+    return y
