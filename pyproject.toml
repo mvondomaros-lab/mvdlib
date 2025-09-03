@@ -5,9 +5,9 @@ description = "A loose collection of library functions. Acts as an incubator for
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "numba>=0.6",
-    "numpy>=2.1",
-    "scipy>=1.15",
+    "numba>=0.60",
+    "numpy>=2.3",
+    "scipy>=1.16",
     "matplotlib>=3.10",
     "seaborn>=0.13"
 ]
