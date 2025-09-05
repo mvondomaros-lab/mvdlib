@@ -41,7 +41,6 @@ preview = ["pixi-build"]
 dist = "hatch build"
 
 [tool.pixi.dependencies]
-conda-index = "*"
 hatch = "*"
 
 [tool.pixi.pypi-dependencies]

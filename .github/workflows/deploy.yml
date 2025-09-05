@@ -30,13 +30,18 @@ jobs:
           pixi build
           pixi run dist
 
-      - name: Assemble Pages Payload
+      - name: Create Conda Index
         run: |
-          mkdir -p public/conda/noarch public/pypi
-          cp -v dist/*.{whl,tar.gz} public/pypi/
+          mkdir -p public/conda/noarch
           cp -v *.conda public/conda/noarch/
-          pixi run python -m conda_index public/conda
+          pixi exec --with conda-index python -m conda_index public/conda
 
+      - name: Assemble PyPI Index
+        run: |
+          mkdir -p public/pypi
+          cp -v dist/*.{whl,tar.gz} public/pypi/
+          pixi exec --with pip2pi dir2pi public/pypi
+          
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
