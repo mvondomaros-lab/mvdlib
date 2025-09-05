@@ -1,0 +1,80 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pixi
+        uses: prefix-dev/setup-pixi@v0.8.1
+
+      - name: Build artifacts
+        run: |
+          pixi install
+          pixi build
+          pixi run dist
+
+      - name: Assemble Pages payload
+        run: |
+          mkdir -p public/downloads/conda public/downloads/pypi
+          cp -v dist/*.{whl,tar.gz} public/downloads/pypi/
+          cp -v *.conda public/downloads/conda/
+          
+          # Make a tiny index.html listing the files.
+          cat > public/index.html <<'HTML'
+          <!doctype html>
+          <meta charset="utf-8">
+          <title>MVDLib Builds</title>
+          <h1>MVDLib Builds</h1>
+          <h2>PyPI (wheel/sdist)</h2>
+          <ul id="pypi"></ul>
+          <h2>Conda</h2>
+          <ul id="conda"></ul>
+          <script>
+            async function list(dir, ulId){
+              const res = await fetch(dir);
+              const text = await res.text();
+              const files = [...text.matchAll(/href="([^"]+)"/g)].map(m=>m[1]).filter(n=>!n.endsWith('/'));
+              const ul = document.getElementById(ulId);
+              files.forEach(f=>{
+                const li=document.createElement('li');
+                const a=document.createElement('a');
+                a.href = dir+f; a.textContent = f; li.appendChild(a); ul.appendChild(li);
+              });
+            }
+            list('downloads/pypi/','pypi');
+            list('downloads/conda/','conda');
+          </script>
+          HTML
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
