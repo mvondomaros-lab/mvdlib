@@ -21,53 +21,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup pixi
+      - name: Setup Pixi
         uses: prefix-dev/setup-pixi@v0.8.1
 
-      - name: Build artifacts
+      - name: Build Artifacts
         run: |
           pixi install
           pixi build
           pixi run dist
 
-      - name: Assemble Pages payload
+      - name: Assemble Pages Payload
         run: |
-          mkdir -p public/downloads/conda public/downloads/pypi
-          cp -v dist/*.{whl,tar.gz} public/downloads/pypi/
-          cp -v *.conda public/downloads/conda/
-          
-          # Generate index.html (with real links)
-          cat > public/index.html <<'HTML'
-          <!doctype html>
-          <meta charset="utf-8">
-          <title>MVDLib Builds</title>
-          <h1>MVDLib Builds</h1>
-      
-          <h2>PyPI</h2>
-          <ul>
-          HTML
-      
-          for f in public/downloads/pypi/*; do
-            [ -f "$f" ] || continue
-            name="$(basename "$f")"
-            printf '<li><a href="downloads/pypi/%s">%s</a></li>\n' "$name" "$name" >> public/index.html
-          done
-      
-          cat >> public/index.html <<'HTML'
-          </ul>
-          <h2>Conda</h2>
-          <ul>
-          HTML
-      
-          for f in public/downloads/conda/*; do
-            [ -f "$f" ] || continue
-            name="$(basename "$f")"
-            printf '<li><a href="downloads/conda/%s">%s</a></li>\n' "$name" "$name" >> public/index.html
-          done
-      
-          cat >> public/index.html <<'HTML'
-          </ul>
-          HTML
+          mkdir -p public/conda/noarch public/pypi
+          cp -v dist/*.{whl,tar.gz} public/pypi/
+          cp -v *.conda public/downloads/conda/noarch/
+          pixi run --with conda-index conda-index public/conda
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
