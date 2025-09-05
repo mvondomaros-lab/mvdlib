@@ -40,8 +40,8 @@ jobs:
         run: |
           mkdir -p public/pypi
           cp -v dist/*.{whl,tar.gz} public/pypi/
-          pixi exec --with pip2pi dir2pi public/pypi
-          
+          pixi exec --with simple503 simple503 --base-url /pypi --sort public/pypi
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
