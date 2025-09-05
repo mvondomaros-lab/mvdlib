@@ -35,7 +35,7 @@ jobs:
           mkdir -p public/conda/noarch public/pypi
           cp -v dist/*.{whl,tar.gz} public/pypi/
           cp -v *.conda public/conda/noarch/
-          pixi run python -m conda-index public/conda
+          pixi run python -m conda_index public/conda
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
