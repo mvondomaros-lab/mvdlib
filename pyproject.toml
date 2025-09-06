@@ -14,8 +14,7 @@ dependencies = [
     "numba>=0.61.2,<0.62",
     "numpy>=2.2.6,<3",
     "scipy>=1.16.1,<2",
-    "matplotlib>=3.10.6,<4"
-]
+    "matplotlib>=3.10.6,<4", ]
 
 [build-system]
 requires = ["hatchling"]
@@ -27,9 +26,9 @@ include = ["mvdlib/style/*.mplstyle"]
 
 [tool.hatch.build.targets.sdist]
 include = [
-  "mvdlib",
-  "README.md",
-  "LICENSE"
+    "mvdlib",
+    "README.md",
+    "LICENSE"
 ]
 
 [tool.pixi.workspace]
@@ -37,14 +36,13 @@ channels = ["https://prefix.dev/conda-forge"]
 platforms = ["osx-arm64", "linux-64"]
 preview = ["pixi-build"]
 
-[tool.pixi.tasks]
-dist = "hatch build"
-
 [tool.pixi.dependencies]
-hatch = "*"
+hatch = ">=1.14.1,<2"
+conda-index = ">=0.6.1,<0.7"
 
 [tool.pixi.pypi-dependencies]
 mvdlib = { path = ".", editable = true }
+simple503 = ">=0.4.0,<0.5"
 
 [tool.pixi.package.build.backend]
 name = "pixi-build-python"
@@ -55,4 +53,4 @@ channels = [
 ]
 
 [tool.pixi.package.host-dependencies]
-hatchling = "*"
+hatchling = ">=1.27.0,<2"

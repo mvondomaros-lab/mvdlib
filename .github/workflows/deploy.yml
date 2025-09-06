@@ -34,15 +34,13 @@ jobs:
         run: |
           mkdir -p public/conda/noarch
           cp -v *.conda public/conda/noarch/
-          pixi exec --with conda-index python -m conda_index public/conda
+          pixi run python -m conda_index public/conda
 
       - name: Assemble PyPI Index
-        shell: pixi exec --spec python=3.12.* -- bash {0}
         run: |
           mkdir -p public/pypi
           cp -v dist/*.{whl,tar.gz} public/pypi/
-          python -m pip install simple503
-          simple503 --base-url /pypi --sort public/pypi
+          pixi run simple503 --base-url /pypi --sort public/pypi
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
