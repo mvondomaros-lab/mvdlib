@@ -28,7 +28,7 @@ jobs:
         run: |
           pixi install
           pixi build
-          pixi run dist
+          pixi run hatch build
 
       - name: Create Conda Index
         run: |
