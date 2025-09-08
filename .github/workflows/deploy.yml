@@ -49,7 +49,6 @@ jobs:
           PAGES_PUSH_TOKEN: ${{ secrets.PAGES_PUSH_TOKEN }}
         run: |
           BRANCH="${BRANCH_PREFIX}-${GITHUB_REF_NAME}-${GITHUB_RUN_ID}-${GITHUB_SHA::7}"
-          echo "Working branch: $BRANCH"
 
           git clone "https://x-access-token:${PAGES_PUSH_TOKEN}@github.com/${ORG}/${PAGES_REPO}.git" pages
           cd pages
