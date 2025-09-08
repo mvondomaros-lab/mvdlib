@@ -72,6 +72,6 @@ jobs:
 
           gh pr create \
             --repo "${ORG}/${PAGES_REPO}" \
-            --title "Publish mvdlib ${GITHUB_REF_NAME}" \
+            --fill \
             --base main \
             --head "$BRANCH"
