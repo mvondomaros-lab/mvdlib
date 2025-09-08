@@ -35,7 +35,7 @@ jobs:
 
       - name: Stage Artifacts
         run: |
-          mkdir -p out/conda out/pypi
+          mkdir -p out/conda/noarch out/pypi
           cp -v *.conda out/conda/noarch/
           cp -v dist/*.{whl,tar.gz} out/pypi/
 
