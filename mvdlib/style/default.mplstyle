@@ -1,24 +1,24 @@
 # Color
 
 ## Text
-text.color: "#2E3440"
-axes.labelcolor: "#2E3440"
-xtick.labelcolor: "#2E3440"
-ytick.labelcolor: "#2E3440"
+text.color: "#252525"
+axes.labelcolor: "#252525"
+xtick.labelcolor: "#252525"
+ytick.labelcolor: "#252525"
 
 ## Edges
-axes.edgecolor: "#2E3440"
-patch.edgecolor: "#2E3440"
-legend.edgecolor: "#2E3440"
+axes.edgecolor: "#252525"
+patch.edgecolor: "#252525"
+legend.edgecolor: "#252525"
 
 ## Ticks
-xtick.color: "#2E3440"
-ytick.color: "#2E3440"
+xtick.color: "#252525"
+ytick.color: "#252525"
 
 ## Lines
-axes.prop_cycle: cycler("color", ["363b46", "#426ca4", "#bb3b5f", "#5fb054"])
-grid.color: "#D8DEE9"
-hatch.color: "#5E81AC"
+axes.prop_cycle: cycler("color", ["5BBE9F", "#FB8353", "#8095C5", "#E479BB", "9FD648", "FFD61F"])
+grid.color: "#E9E9E9"
+hatch.color: "#252525"
 
 
 #  Font
