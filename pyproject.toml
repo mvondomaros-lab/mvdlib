@@ -1,6 +1,6 @@
 [project]
 name = "mvdlib"
-version = "0.8.2"
+version = "0.8.3"
 
 authors = [
     { name = "Michael von Domaros", email = "mvondomaros@uni-marburg.de" }
@@ -52,3 +52,9 @@ channels = [
 
 [tool.pixi.package.host-dependencies]
 hatchling = ">=1.27.0,<2"
+
+[tool.pixi.package.run-dependencies]
+numba = ">=0.61.2,<0.62"
+numpy = ">=2.2.6,<3"
+scipy = ">=1.16.1,<2"
+matplotlib =">=3.10.6,<4"
