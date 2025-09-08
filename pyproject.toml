@@ -1,6 +1,6 @@
 [project]
 name = "mvdlib"
-version = "0.8.0"
+version = "0.8.1"
 
 authors = [
     { name = "Michael von Domaros", email = "mvondomaros@uni-marburg.de" }

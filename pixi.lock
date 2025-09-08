@@ -2252,8 +2252,8 @@ packages:
   timestamp: 1756678853358
 - pypi: ./
   name: mvdlib
-  version: 0.8.0
-  sha256: b1dd10b9ec39c6ee545fb50c93ccd92b58372762d1c6bee0596d6ebb137608ed
+  version: 0.8.1
+  sha256: db569a16882d7d38c773589ebf95d7b484ac0668df6891668553f94d4f3a9b39
   requires_dist:
   - numba>=0.61.2,<0.62
   - numpy>=2.2.6,<3
