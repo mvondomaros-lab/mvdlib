@@ -1,6 +1,6 @@
 [project]
 name = "mvdlib"
-version = "0.8.1"
+version = "0.8.2"
 
 authors = [
     { name = "Michael von Domaros", email = "mvondomaros@uni-marburg.de" }
@@ -38,11 +38,9 @@ preview = ["pixi-build"]
 
 [tool.pixi.dependencies]
 hatch = ">=1.14.1,<2"
-conda-index = ">=0.6.1,<0.7"
 
 [tool.pixi.pypi-dependencies]
 mvdlib = { path = ".", editable = true }
-simple503 = ">=0.4.0,<0.5"
 
 [tool.pixi.package.build.backend]
 name = "pixi-build-python"
