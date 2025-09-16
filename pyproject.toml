@@ -1,6 +1,6 @@
 [project]
 name = "mvdlib"
-version = "0.8.3"
+version = "0.8.4"
 
 authors = [
     { name = "Michael von Domaros", email = "mvondomaros@uni-marburg.de" }
@@ -11,10 +11,11 @@ license = "MIT"
 
 requires-python = ">=3.12"
 dependencies = [
-    "numba>=0.61.2,<0.62",
-    "numpy>=2.2.6,<3",
+    "numba>=0.61,<0.63",
+    "numpy>=2.2.6,<2.3",
     "scipy>=1.16.1,<2",
-    "matplotlib>=3.10.6,<4", ]
+    "matplotlib>=3.10.6,<4", 
+    "seaborn >=0.13.2,<0.14" ]
 
 [build-system]
 requires = ["hatchling"]
@@ -38,6 +39,7 @@ preview = ["pixi-build"]
 
 [tool.pixi.dependencies]
 hatch = ">=1.14.1,<2"
+numpy = "<2.3"
 
 [tool.pixi.pypi-dependencies]
 mvdlib = { path = ".", editable = true }
@@ -54,7 +56,8 @@ channels = [
 hatchling = ">=1.27.0,<2"
 
 [tool.pixi.package.run-dependencies]
-numba = ">=0.61.2,<0.62"
-numpy = ">=2.2.6,<3"
+numba = ">=0.61,<0.62"
+numpy = ">=2.2.6,<2.3"
 scipy = ">=1.16.1,<2"
 matplotlib =">=3.10.6,<4"
+seaborn = ">=0.13.2,<0.14"
