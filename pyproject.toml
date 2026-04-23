@@ -6,7 +6,8 @@ authors = [
 ]
 description = "An incubator library with custom matplotlib styles, utility functions, and experimental tools for future projects."
 readme = "README.md"
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE"]
 
 requires-python = ">=3.10"
 dependencies = [
