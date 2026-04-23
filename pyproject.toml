@@ -1,26 +1,24 @@
 [project]
 name = "mvdlib"
-version = "0.8.5"
-
+version = "0.11"
 authors = [
     { name = "Michael von Domaros", email = "mvondomaros@uni-marburg.de" }
 ]
-description = "An incubator library with custom Matplotlib styles, utility functions, and experimental tools for future projects."
+description = "An incubator library with custom matplotlib styles, utility functions, and experimental tools for future projects."
 readme = "README.md"
-license = "MIT"
-license-files = ["LICENSE"]
+license = { file = "LICENSE" }
 
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 dependencies = [
-    "numba>=0.63.1,<0.64",
-    "numpy>=2.3.5,<3",
-    "scipy>=1.17.0,<2",
-    "matplotlib>=3.10.8,<4",
-    "seaborn>=0.13.2,<0.14",
+    "numba>=0.60,<0.66",
+    "numpy>=2,<3",
+    "scipy>=1,<2",
+    "matplotlib>=3,<4",
+    "seaborn>=0.10,<0.14",
 ]
 
 [build-system]
-requires = ["hatchling>=1.27,<2"]
+requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
@@ -40,14 +38,9 @@ platforms = ["osx-arm64", "linux-64"]
 preview = ["pixi-build"]
 
 [tool.pixi.dependencies]
-hatch = ">=1.16.2,<2"
-
-[tool.pixi.feature.pycharm.dependencies]
-pixi-pycharm = ">=0.0.10,<0.0.11"
-
-[tool.pixi.environments]
-default = { features = [] }
-pycharm = { features = ["pycharm"] }
+hatch = "*"
+pytest = "*"
+pixi-pycharm = "*"
 
 [tool.pixi.pypi-dependencies]
 mvdlib = { path = ".", editable = true }
