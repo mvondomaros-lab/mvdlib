@@ -36,6 +36,26 @@ def test_msd_rejects_invalid_maxsteps() -> None:
         diffusion.msd(np.arange(5), maxsteps=6)
 
 
+@pytest.mark.parametrize(
+    "x, box, expected",
+    [
+        (np.array([1.0, 1.1]), 2.0, np.array([1.0, 1.1])),
+        (np.array([1.0, 0.9]), 2.0, np.array([1.0, 0.9])),
+        (np.array([0.0, 1.0]), 2.0, np.array([0.0, 1.0])),
+        (np.array([0.0, 1.9]), 2.0, np.array([0.0, -0.1])),
+        (np.array([0.0, 1.1]), 2.0, np.array([0.0, -0.9])),
+        (np.array([1.9, 0.0]), 2.0, np.array([1.9, 2.0])),
+        (np.array([1.1, 0.0]), 2.0, np.array([1.1, 2.0])),
+    ],
+)
+def test_msd_unwraps_periodic_trajectory(
+    x: NDArray[np.float64], box: float, expected: NDArray[np.float64]
+) -> None:
+    msd = diffusion.msd(x, box=box)
+    expected_msd = diffusion.msd(expected)
+    np.testing.assert_allclose(msd, expected_msd)
+
+
 def test_ld_is_exposed() -> None:
     assert callable(diffusion.ld)
 
