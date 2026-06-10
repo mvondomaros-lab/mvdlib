@@ -1,9 +1,11 @@
 import numbers
 
-import numba
 import numpy as np
 from numpy.typing import NDArray
 from scipy.fft import irfft, rfft
+
+# noinspection PyProtectedMember
+from mvdlib._core.correlation import acf_naive as _acf_naive
 
 # noinspection PyProtectedMember
 from mvdlib._core.math import cabs2, nextpow2
@@ -77,7 +79,6 @@ def tcf(
     return c
 
 
-@numba.njit(fastmath=True)
 def acf_naive(x: NDArray[np.float64], nc: int | None = None) -> NDArray[np.float64]:
     """
     Compute the autocorrelation function of a signal by direct summation.
@@ -95,16 +96,8 @@ def acf_naive(x: NDArray[np.float64], nc: int | None = None) -> NDArray[np.float
         Autocorrelation function.
     """
     x = _validate_signal(x)
-    nx = x.size
-    nc = _validate_nc(nc, nx)
-    c = np.zeros(nc, dtype=np.float64)
-
-    for j in range(nc):
-        acc = 0.0
-        for i in range(nx - j):
-            acc += x[i] * x[i + j]
-        c[j] = acc
-    return c
+    nc = _validate_nc(nc, x.size)
+    return _acf_naive(x, nc)
 
 
 def _process_signal(
