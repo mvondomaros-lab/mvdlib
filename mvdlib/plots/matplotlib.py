@@ -1,5 +1,4 @@
 import numpy as np
-import seaborn as sns
 from matplotlib.axes import Axes
 from matplotlib.collections import QuadMesh
 from matplotlib.contour import QuadContourSet
