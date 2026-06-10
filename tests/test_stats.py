@@ -5,7 +5,8 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from mvdlib import stats
+from mvdlib import timeseries
+from mvdlib.timeseries import correlation
 
 
 @pytest.mark.parametrize(
@@ -19,7 +20,7 @@ from mvdlib import stats
 )
 def test_acf_naive_basic(x: NDArray, nc: Optional[int], expected: NDArray) -> None:
     """Test basic cases for the naive ACF implementation."""
-    assert stats.acf_naive(x, nc) == pytest.approx(expected)
+    assert timeseries.acf_naive(x, nc) == pytest.approx(expected)
 
 
 def test_acf_naive_exponential() -> None:
@@ -27,7 +28,7 @@ def test_acf_naive_exponential() -> None:
     nx = 1000
     nc = 100
     x = np.exp(-np.arange(nx))
-    acf = stats.acf_naive(x, nc)
+    acf = timeseries.acf_naive(x, nc)
     assert acf == pytest.approx(x[:nc] / (1.0 - np.exp(-2.0)))
 
 
@@ -42,7 +43,7 @@ def test_acf_naive_exponential() -> None:
 )
 def test_acf_basic(x: NDArray, nc: Optional[int], expected: NDArray) -> None:
     """Test basic cases for the FFT-based ACF implementation."""
-    assert stats.acf(x, nc) == pytest.approx(expected)
+    assert timeseries.acf(x, nc) == pytest.approx(expected)
 
 
 def test_acf_exponential() -> None:
@@ -50,7 +51,7 @@ def test_acf_exponential() -> None:
     nx = 1000
     nc = 100
     x = np.exp(-np.arange(nx))
-    acf = stats.acf(x, nc)
+    acf = timeseries.acf(x, nc)
     assert acf == pytest.approx(x[:nc] / (1.0 - np.exp(-2.0)))
 
 
@@ -60,8 +61,8 @@ def test_acf_exponential() -> None:
 def test_acf_random_comparison(nx: int, nc: int) -> None:
     """Compare FFT-based ACF with naive ACF for random signals."""
     x = np.random.randn(nx)
-    c = stats.acf(x, nc)
-    c_naive = stats.acf_naive(x, nc)
+    c = timeseries.acf(x, nc)
+    c_naive = timeseries.acf_naive(x, nc)
     assert c == pytest.approx(c_naive)
 
 
@@ -85,13 +86,13 @@ def test_acf_random_comparison(nx: int, nc: int) -> None:
 )
 def test_tcf_basic(x: NDArray, shift: bool, scale: bool, expected: NDArray) -> None:
     """Test basic cases for the TCF implementation."""
-    assert stats.tcf(x, shift=shift, scale=scale) == pytest.approx(expected)
+    assert timeseries.tcf(x, shift=shift, scale=scale) == pytest.approx(expected)
 
 
 def test_tcf_zero_lag() -> None:
     """Test that TCF at zero lag is one after shifting and scaling."""
     x = np.cumsum(1.0 + 10.0 * np.random.randn(100))
-    c = stats.tcf(x, shift=True, scale=True)
+    c = timeseries.tcf(x, shift=True, scale=True)
     assert c[0] == pytest.approx(1.0)
 
 
@@ -100,7 +101,7 @@ def test_tcf_exponential() -> None:
     nx = 1000
     nc = 100
     x = np.exp(-np.arange(nx))
-    c = stats.tcf(x, nc=nc, shift=False)
+    c = timeseries.tcf(x, nc=nc, shift=False)
     c_ref = np.exp(-np.arange(nc)) / np.arange(nx, nx - nc, -1) / (1.0 - np.exp(-2.0))
     assert c == pytest.approx(c_ref)
 
@@ -108,5 +109,5 @@ def test_tcf_exponential() -> None:
 def test_tcf_large_signal() -> None:
     """Test TCF with a large signal to ensure performance."""
     x = np.random.randn(10000)
-    c = stats.tcf(x)
+    c = timeseries.tcf(x)
     assert c.size > 0  # Ensure computation is performed.

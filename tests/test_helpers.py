@@ -4,7 +4,8 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from mvdlib.helpers import cabs2, nextpow2, unwrap
+from mvdlib._core.math import cabs2, nextpow2
+from mvdlib.diffusion import unwrap
 
 
 @pytest.mark.parametrize(

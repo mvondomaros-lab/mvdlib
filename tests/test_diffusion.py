@@ -4,7 +4,8 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from mvdlib import diffusion
+from mvdlib import diffusion, timeseries
+from mvdlib.timeseries import correlation
 
 
 @pytest.mark.parametrize(
@@ -21,7 +22,7 @@ from mvdlib import diffusion
 def test_mssq(x: NDArray, nc: Optional[int], expected: NDArray) -> None:
     """Test the mean sum of squares function."""
     nc = nc or x.size
-    assert diffusion._mssq(x, nc) == pytest.approx(expected)
+    assert timeseries.mssq(x, nc) == pytest.approx(expected)
 
 
 @pytest.mark.parametrize(
