@@ -12,3 +12,6 @@ mvdlib-*.conda
 
 # Cache
 __pycache__
+
+# Scratch
+playground.ipynb

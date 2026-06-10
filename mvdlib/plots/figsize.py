@@ -1,47 +1,46 @@
-from __future__ import annotations
-
-import typing
-
-import numpy as np
-
-if typing.TYPE_CHECKING:
-    from numpy.typing import NDArray
+from dataclasses import dataclass
 
 
+@dataclass(frozen=True, slots=True)
 class FigSize:
     """
-    Callable object for returning figure dimensions.
+    Compute Matplotlib figure sizes for publication column layouts.
     """
 
-    def __init__(
-        self, w: float = 1.5, h: float = 1.63, w0: float = 1.0, h0: float = 0.47
-    ):
+    single_width: float = 3.35
+    double_width: float = 7.0
+    height: float = 2.5
+
+    def __call__(
+        self,
+        layout: int | str = 1,
+        height: float | None = None,
+    ) -> tuple[float, float]:
         """
-        Initialize a FigSize object.
+        Compute the figure size.
 
-        :param w: Width of one panel.
-        :param h: Height of one panel.
-        :param w0: Width offset.
-        :param h0: Height offset.
+        Parameters
+        ----------
+        layout
+            Figure width. Accepted values are ``1`` or ``"single"`` for a
+            single-column figure and ``2`` or ``"double"`` for a double-column
+            figure.
+        height
+            Figure height in inches. Defaults to the instance height.
+
+        Returns
+        -------
+        tuple of float
+            Figure width and height in inches.
         """
-        self.w = w
-        self.h = h
-        self.w0 = w0
-        self.h0 = h0
+        height = self.height if height is None else height
+        if height <= 0.0:
+            raise ValueError("height must be positive")
+        if layout in (1, "single"):
+            width = self.single_width
+        elif layout in (2, "double"):
+            width = self.double_width
+        else:
+            raise ValueError("layout must be 1, 2, 'single', or 'double'")
 
-    def __call__(self, nrows: int | float, ncols: int | float) -> NDArray:
-        """
-        Calculate the figure size.
-
-        Uses the following formulas:
-            width = w0 + ncols * w
-            height = h0 + nrows * h
-
-        :param nrows: The number of rows.
-        :param ncols: The number of columns.
-
-        :return: The figure size.
-        """
-        width = self.w0 + self.w * ncols
-        height = self.h0 + self.h * nrows
-        return np.array([width, height])
+        return width, height

@@ -1,21 +1,17 @@
 [project]
 name = "mvdlib"
-version = "0.11"
-authors = [
-    { name = "Michael von Domaros", email = "mvondomaros@uni-marburg.de" }
-]
+version = "0.13"
+authors = [{ name = "Michael von Domaros", email = "mvondomaros@uni-marburg.de" }]
 description = "An incubator library with custom matplotlib styles, utility functions, and experimental tools for future projects."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 
 requires-python = ">=3.10"
-dependencies = [
-    "numba>=0.60,<0.66",
-    "numpy>=2,<3",
-    "scipy>=1,<2",
-    "matplotlib>=3,<4",
-    "seaborn>=0.10,<0.14",
+dependencies = ["numba>=0.65.1,<0.66",
+    "numpy",
+    "scipy",
+    "matplotlib"
 ]
 
 [build-system]
@@ -27,11 +23,9 @@ packages = ["mvdlib"]
 include = ["mvdlib/style/*.mplstyle"]
 
 [tool.hatch.build.targets.sdist]
-include = [
-    "mvdlib",
+include = ["mvdlib",
     "README.md",
-    "LICENSE"
-]
+    "LICENSE"]
 
 [tool.pixi.workspace]
 channels = ["https://prefix.dev/conda-forge"]
@@ -39,9 +33,9 @@ platforms = ["osx-arm64", "linux-64"]
 preview = ["pixi-build"]
 
 [tool.pixi.dependencies]
-hatch = "*"
-pytest = "*"
-pixi-pycharm = "*"
+hatch = ">=1.17.0,<2"
+pytest = ">=9.0.3,<10"
+seaborn = ">=0.13.2,<0.14"
 
 [tool.pixi.pypi-dependencies]
 mvdlib = { path = ".", editable = true }
@@ -49,8 +43,7 @@ mvdlib = { path = ".", editable = true }
 [tool.pixi.package.build.backend]
 name = "pixi-build-python"
 version = "*"
-channels = [
-    "https://prefix.dev/pixi-build-backends",
+channels = ["https://prefix.dev/pixi-build-backends",
     "https://prefix.dev/conda-forge",
 ]
 

@@ -1,45 +1,9 @@
-from __future__ import annotations
-
-import typing
-
 import numpy as np
-
-if typing.TYPE_CHECKING:
-    from typing import Optional, Tuple
-
-    from matplotlib.axes import Axes
-    from matplotlib.collections import QuadMesh
-    from matplotlib.contour import QuadContourSet
-    from matplotlib.lines import Line2D
-    from numpy.typing import NDArray
-
-
-def _register_colormaps():
-    """
-    Register custom colormaps with matplotlib.
-
-    The following colormaps are registered:
-        - "mvdlib.coolwarm": A diverging colormap from cool to warm.s
-        - "mvdlib.warmcool": A diverging colormap from warm to cool.
-        - "mvdlib.bluered": A blend from blue to red.
-        - "mvdlib.redblue": A blend from red to blue.
-
-    This function also imports seaborn, which registers its own colormaps.
-    """
-    import matplotlib as mpl
-    import seaborn as sns
-
-    cmap = sns.diverging_palette(250, 0, l=70, center="dark", as_cmap=True)
-    mpl.colormaps.register(cmap, name="mvdlib.coolwarm")
-
-    cmap = sns.diverging_palette(0, 250, l=70, center="dark", as_cmap=True)
-    mpl.colormaps.register(cmap, name="mvdlib.warmcool")
-
-    cmap = sns.color_palette("blend:#426ca4,#bb3b5f", as_cmap=True)
-    mpl.colormaps.register(cmap, name="mvdlib.bluered")
-
-    cmap = sns.color_palette("blend:#bb3b5f,#426ca4", as_cmap=True)
-    mpl.colormaps.register(cmap, name="mvdlib.redblue")
+from matplotlib.axes import Axes
+from matplotlib.collections import QuadMesh
+from matplotlib.contour import QuadContourSet
+from matplotlib.lines import Line2D
+from numpy.typing import ArrayLike, NDArray
 
 
 def contourplot(
@@ -48,36 +12,56 @@ def contourplot(
     y: NDArray[np.float64],
     z: NDArray[np.float64],
     *,
-    alpha: Optional[float] = 0.5,
-    cmap: Optional[str] = "mvdlib.bluered",
-    pcolormesh_kwargs: Optional[dict] = None,
-    contour_kwargs: Optional[dict] = None,
-    clabel_kwargs: Optional[dict] = None,
-) -> Tuple[QuadMesh, QuadContourSet]:
+    alpha: float | None = 0.5,
+    cmap: str | None = None,
+    contour_color: str | None = None,
+    clabel_color: str | None = None,
+    pcolormesh_kwargs: dict | None = None,
+    contour_kwargs: dict | None = None,
+    clabel_kwargs: dict | None = None,
+) -> tuple[QuadMesh, QuadContourSet]:
     """
     Draw a combined color mesh and contour plot.
 
-    :param ax: The axis to draw on.
-    :param x: The x coordinates.
-    :param y: The y coordinates.
-    :param z: The z coordinates.
-    :param alpha: The alpha value for the color mesh.
-    :param cmap: A colormap. Default is "mvdlib.bluered".
-    :param pcolormesh_kwargs: Dictionary for additional arguments passed to `ax.pcolormesh()`.
-    :param contour_kwargs: Dictionary for additional arguments passed to `ax.contour()`.
-    :param clabel_kwargs: Dictionary for additional arguments passed to `ax.clabel()`.
-    :return: The QuadMesh and QuadContourSet objects returned by `ax.pcolormesh()` and `ax.contour()`, respectively,
+    Parameters
+    ----------
+    ax
+        Axis to draw on.
+    x, y, z
+        Coordinates and values passed to ``Axes.pcolormesh`` and ``Axes.contour``.
+    alpha
+        Color mesh transparency.
+    cmap
+        Color mesh colormap.
+    contour_color
+        Contour line color. Defaults to ``"C0"``.
+    clabel_color
+        Contour label color. Defaults to ``contour_color``.
+    pcolormesh_kwargs
+        Additional keyword arguments passed to ``Axes.pcolormesh``.
+    contour_kwargs
+        Additional keyword arguments passed to ``Axes.contour``.
+    clabel_kwargs
+        Additional keyword arguments passed to ``ContourSet.clabel``.
+
+    Returns
+    -------
+    tuple
+        Color mesh and contour set.
     """
-    pcolormesh_kwargs = pcolormesh_kwargs or {}
-    contour_kwargs = contour_kwargs or {}
-    clabel_kwargs = clabel_kwargs or {}
+    pcolormesh_kwargs = {} if pcolormesh_kwargs is None else pcolormesh_kwargs.copy()
+    contour_kwargs = {} if contour_kwargs is None else contour_kwargs.copy()
+    clabel_kwargs = {} if clabel_kwargs is None else clabel_kwargs.copy()
 
     ax.grid(False)
 
     pcolormesh_kwargs.setdefault("alpha", alpha)
-    pcolormesh_kwargs.setdefault("cmap", cmap)
-    contour_kwargs.setdefault("colors", "#ECEFF4")
-    clabel_kwargs.setdefault("colors", "#ECEFF4")
+    if cmap is not None:
+        pcolormesh_kwargs.setdefault("cmap", cmap)
+    contour_color = "C0" if contour_color is None else contour_color
+    clabel_color = contour_color if clabel_color is None else clabel_color
+    contour_kwargs.setdefault("colors", contour_color)
+    clabel_kwargs.setdefault("colors", clabel_color)
 
     mesh = ax.pcolormesh(x, y, z, **pcolormesh_kwargs)
     contourset = ax.contour(x, y, z, **contour_kwargs)
@@ -88,29 +72,47 @@ def contourplot(
 
 def kdeplot(
     ax: Axes,
-    x: NDArray[np.float64],
+    x: ArrayLike,
     *,
-    grid: Optional[NDArray[np.float64]] = None,
-    factor: Optional[float] = None,
+    grid: ArrayLike | None = None,
+    factor: float | None = None,
     **kwargs,
 ) -> Line2D:
     """
-    Draw a Kernel Density Estimate (KDE).
+    Draw a kernel density estimate.
 
-    :param ax: The axis to draw on.
-    :param x: The data.
-    :param grid: The grid on which the KDE is evaluated. If None, a grid is automatically generated.
-    :param factor: The bandwidth factor for the KDE. If None, the default is used.
-    :param kwargs: Additional keyword arguments passed to `ax.plot`.
-    :return: The Line2D object returned by `ax.plot`.
+    Parameters
+    ----------
+    ax
+        Axis to draw on.
+    x
+        Input samples.
+    grid
+        Evaluation grid. Generated automatically if omitted.
+    factor
+        Bandwidth factor passed to ``scipy.stats.gaussian_kde``.
+    **kwargs
+        Additional keyword arguments passed to ``Axes.plot``.
+
+    Returns
+    -------
+    matplotlib.lines.Line2D
+        KDE line.
     """
     from scipy.stats import gaussian_kde
 
+    x = np.asarray(x, dtype=np.float64)
+    if x.ndim != 1:
+        raise ValueError("x must be one-dimensional")
+    if x.size == 0:
+        raise ValueError("x must not be empty")
     kde = gaussian_kde(x, bw_method=factor)
     if grid is None:
         grid = np.linspace(x.min() - 0.02 * np.ptp(x), x.max() + 0.02 * np.ptp(x), 250)
-
+    else:
+        grid = np.asarray(grid, dtype=np.float64)
+        if grid.ndim != 1:
+            raise ValueError("grid must be one-dimensional")
     y = kde(grid)
     lines = ax.plot(grid, y, **kwargs)
-    # Only one line.
     return lines[0]
