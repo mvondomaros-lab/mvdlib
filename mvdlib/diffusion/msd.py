@@ -1,7 +1,7 @@
 import numbers
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 
 # noinspection PyProtectedMember
 from mvdlib._core.msd import mssq as _mssq
@@ -12,7 +12,7 @@ from mvdlib.timeseries import tcf
 
 
 def msd(
-    x: NDArray[np.float64],
+    x: ArrayLike,
     *,
     maxsteps: int | None = None,
     box: float | None = None,
@@ -32,7 +32,7 @@ def msd(
     Parameters
     ----------
     x
-        Input trajectory.
+        Input trajectory. Converted to a one-dimensional ``float64`` array.
     maxsteps
         Maximum number of time lags to compute. Defaults to ``x.size``.
     box
