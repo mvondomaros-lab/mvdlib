@@ -1,6 +1,7 @@
+---
 name: Build & Deploy
 
-on:
+"on":
   push:
     branches: [ main ]
   workflow_dispatch:
@@ -27,20 +28,16 @@ jobs:
       - name: Setup Pixi
         uses: prefix-dev/setup-pixi@v0.9.6
         with:
-          pixi-version: v0.70.1
+          pixi-version: v0.70.2
           cache: true
+          cache-write: >-
+            ${{ github.event_name == 'push' && github.ref_name == 'main' }}
 
-      - name: Build Artifacts
-        run: |
-          pixi install --locked
-          pixi publish
-          pixi run hatch build
+      - name: Install Pixi environment
+        run: pixi install --locked
 
-      - name: Stage Artifacts
-        run: |
-          mkdir -p out/conda/noarch out/pypi
-          cp -v *.conda out/conda/noarch/
-          cp -v dist/*.{whl,tar.gz} out/pypi/
+      - name: Build artifacts
+        run: pixi run build-artifacts
 
       - name: Prepare Git Identity
         run: |
@@ -51,9 +48,12 @@ jobs:
         env:
           PAGES_PUSH_TOKEN: ${{ secrets.PAGES_PUSH_TOKEN }}
         run: |
-          BRANCH="${BRANCH_PREFIX}-${GITHUB_REF_NAME}-${GITHUB_RUN_ID}-${GITHUB_SHA::7}"
+          SHORT_SHA="${GITHUB_SHA::7}"
+          BRANCH="${BRANCH_PREFIX}-${GITHUB_REF_NAME}-${GITHUB_RUN_ID}-${SHORT_SHA}"
 
-          git clone "https://x-access-token:${PAGES_PUSH_TOKEN}@github.com/${ORG}/${PAGES_REPO}.git" pages
+          git clone \
+            "https://x-access-token:${PAGES_PUSH_TOKEN}@github.com/${ORG}/${PAGES_REPO}.git" \
+            pages
           cd pages
           git checkout -b "$BRANCH"
 
@@ -70,11 +70,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PAGES_PUSH_TOKEN }}
         run: |
-          BRANCH="${BRANCH_PREFIX}-${GITHUB_REF_NAME}-${GITHUB_RUN_ID}-${GITHUB_SHA::7}"
+          SHORT_SHA="${GITHUB_SHA::7}"
+          BRANCH="${BRANCH_PREFIX}-${GITHUB_REF_NAME}-${GITHUB_RUN_ID}-${SHORT_SHA}"
 
           gh pr create \
             --repo "${ORG}/${PAGES_REPO}" \
             --title "Publish mvdlib ${GITHUB_REF_NAME}" \
-            --body "Adds new artifacts from ${GITHUB_REPOSITORY} @ ${GITHUB_SHA}.\n" \
+            --body "Adds new artifacts from ${GITHUB_REPOSITORY} @ ${GITHUB_SHA}." \
             --base main \
             --head "$BRANCH"

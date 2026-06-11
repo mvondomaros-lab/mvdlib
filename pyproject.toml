@@ -40,6 +40,18 @@ seaborn = ">=0.13.2,<0.14"
 [tool.pixi.pypi-dependencies]
 mvdlib = { path = ".", editable = true }
 
+[tool.pixi.tasks]
+build-conda = { cmd = "pixi publish" }
+build-wheel = { cmd = "hatch build" }
+stage-artifacts = { cmd = """
+rm -rf out
+mkdir -p out/conda/noarch out/pypi
+cp *.conda out/conda/noarch/
+cp dist/*.whl out/pypi/
+cp dist/*.tar.gz out/pypi/
+""" }
+build-artifacts = { depends-on = ["build-conda", "build-wheel", "stage-artifacts"] }
+
 [tool.pixi.package.build.backend]
 name = "pixi-build-python"
 version = "<=0.5,<0.6"
