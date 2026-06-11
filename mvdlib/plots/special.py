@@ -1,21 +1,23 @@
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.collections import QuadMesh
+from matplotlib.colors import Colormap
 from matplotlib.contour import QuadContourSet
 from matplotlib.lines import Line2D
-from numpy.typing import ArrayLike, NDArray
+from matplotlib.typing import ColorType
+from numpy.typing import ArrayLike
 
 
 def contourplot(
     ax: Axes,
-    x: NDArray[np.float64],
-    y: NDArray[np.float64],
-    z: NDArray[np.float64],
+    x: ArrayLike,
+    y: ArrayLike,
+    z: ArrayLike,
     *,
     alpha: float | None = 0.5,
-    cmap: str | None = None,
-    contour_color: str | None = None,
-    clabel_color: str | None = None,
+    cmap: str | Colormap | None = None,
+    contour_color: ColorType | None = None,
+    clabel_color: ColorType | None = None,
     pcolormesh_kwargs: dict | None = None,
     contour_kwargs: dict | None = None,
     clabel_kwargs: dict | None = None,
