@@ -42,9 +42,7 @@ mvdlib = { path = ".", editable = true }
 
 [tool.pixi.package.build.backend]
 name = "pixi-build-python"
-channels = ["https://prefix.dev/pixi-build-backends",
-    "https://prefix.dev/conda-forge",
-]
+version = "<=0.5,<0.6"
 
 [tool.pixi.package.build.config]
 ignore-pypi-mapping = false
