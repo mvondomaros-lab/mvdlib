@@ -71,6 +71,8 @@ def tcf(
         Time correlation function.
     """
     x = _validate_signal(x)
+    if x.size < 2:
+        raise ValueError("x must contain at least two points")
     nc = _validate_nc(nc, x.size)
     x = _process_signal(x, shift, scale)
     c = acf(x, nc)

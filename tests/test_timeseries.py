@@ -77,6 +77,14 @@ def test_correlation_rejects_invalid_nc(func) -> None:
         func(x, nc=0)
 
 
+def test_tcf_rejects_short_signal() -> None:
+    with pytest.raises(ValueError, match="x must not be empty"):
+        timeseries.tcf(np.array([], dtype=np.float64))
+
+    with pytest.raises(ValueError, match="x must contain at least two points"):
+        timeseries.tcf(np.array([0.0]))
+
+
 @pytest.mark.parametrize(
     "x, shift, scale, expected",
     [

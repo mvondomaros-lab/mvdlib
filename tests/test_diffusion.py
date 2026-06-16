@@ -24,6 +24,14 @@ def test_msd_maxsteps() -> None:
     np.testing.assert_allclose(msd, np.array([0.0, 1.0]))
 
 
+def test_msd_rejects_short_trajectory() -> None:
+    with pytest.raises(ValueError, match="x must contain at least two points"):
+        diffusion.msd(np.array([], dtype=np.float64))
+
+    with pytest.raises(ValueError, match="x must contain at least two points"):
+        diffusion.msd(np.array([0.0]))
+
+
 def test_msd_rejects_invalid_maxsteps() -> None:
     with pytest.raises(TypeError, match="maxsteps must be an integer"):
         # noinspection PyTypeChecker

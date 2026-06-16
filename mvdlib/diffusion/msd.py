@@ -32,7 +32,7 @@ def msd(
     Parameters
     ----------
     x
-        Input trajectory. Converted to a one-dimensional ``float64`` array.
+        Input trajectory.
     maxsteps
         Maximum number of time lags to compute. Defaults to ``x.size``.
     box
@@ -47,8 +47,8 @@ def msd(
     x = np.asarray(x, dtype=np.float64)
     if x.ndim != 1:
         raise ValueError("x must be one-dimensional")
-    if x.size == 0:
-        raise ValueError("x must not be empty")
+    if x.size < 2:
+        raise ValueError("x must contain at least two points")
 
     if maxsteps is None:
         maxsteps = x.size
