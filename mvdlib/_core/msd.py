@@ -3,6 +3,21 @@ import numpy as np
 from numpy.typing import NDArray
 
 
+@numba.njit(cache=True, fastmath=True)
+def msd_naive(x: NDArray[np.float64], maxsteps: int) -> NDArray[np.float64]:
+    """Direct MSD."""
+    out = np.empty(maxsteps, dtype=np.float64)
+    for lag in range(maxsteps):
+        n = x.size - lag
+        acc = 0.0
+        for i in range(n):
+            dx = x[i + lag] - x[i]
+            acc += dx * dx
+        out[lag] = acc / n
+    return out
+
+
+
 @numba.njit(fastmath=True)
 def mssq(x: NDArray[np.float64], maxsteps: int) -> NDArray[np.float64]:
     """

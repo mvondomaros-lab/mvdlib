@@ -1,6 +1,6 @@
 [project]
 name = "mvdlib"
-version = "0.15"
+version = "0.16"
 authors = [{ name = "Michael von Domaros", email = "mvondomaros@uni-marburg.de" }]
 description = "An incubator library with custom matplotlib styles, utility functions, and experimental tools for future projects."
 readme = "README.md"

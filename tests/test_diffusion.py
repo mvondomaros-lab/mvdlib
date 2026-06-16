@@ -18,9 +18,28 @@ def test_msd(x: NDArray[np.float64], expected: NDArray[np.float64]) -> None:
     np.testing.assert_allclose(msd, expected)
 
 
+@pytest.mark.parametrize(
+    "x, expected",
+    [
+        (np.zeros(5), np.zeros(5)),
+        (np.ones(5), np.zeros(5)),
+        (np.arange(5), np.arange(5) ** 2),
+    ],
+)
+def test_msd_naive(x: NDArray[np.float64], expected: NDArray[np.float64]) -> None:
+    msd = diffusion.msd_naive(x)
+    np.testing.assert_allclose(msd, expected)
+
+
 def test_msd_maxsteps() -> None:
     x = np.arange(5, dtype=np.float64)
     msd = diffusion.msd(x, maxsteps=2)
+    np.testing.assert_allclose(msd, np.array([0.0, 1.0]))
+
+
+def test_msd_naive_maxsteps() -> None:
+    x = np.arange(5, dtype=np.float64)
+    msd = diffusion.msd_naive(x, maxsteps=2)
     np.testing.assert_allclose(msd, np.array([0.0, 1.0]))
 
 
@@ -30,6 +49,14 @@ def test_msd_rejects_short_trajectory() -> None:
 
     with pytest.raises(ValueError, match="x must contain at least two points"):
         diffusion.msd(np.array([0.0]))
+
+
+def test_msd_naive_rejects_short_trajectory() -> None:
+    with pytest.raises(ValueError, match="x must contain at least two points"):
+        diffusion.msd_naive(np.array([], dtype=np.float64))
+
+    with pytest.raises(ValueError, match="x must contain at least two points"):
+        diffusion.msd_naive(np.array([0.0]))
 
 
 def test_msd_rejects_invalid_maxsteps() -> None:
@@ -42,6 +69,18 @@ def test_msd_rejects_invalid_maxsteps() -> None:
 
     with pytest.raises(ValueError, match="maxsteps must not exceed x.size"):
         diffusion.msd(np.arange(5), maxsteps=6)
+
+
+def test_msd_naive_rejects_invalid_maxsteps() -> None:
+    with pytest.raises(TypeError, match="maxsteps must be an integer"):
+        # noinspection PyTypeChecker
+        diffusion.msd_naive(np.arange(5), maxsteps=2.5)
+
+    with pytest.raises(ValueError, match="maxsteps must be positive"):
+        diffusion.msd_naive(np.arange(5), maxsteps=0)
+
+    with pytest.raises(ValueError, match="maxsteps must not exceed x.size"):
+        diffusion.msd_naive(np.arange(5), maxsteps=6)
 
 
 @pytest.mark.parametrize(
@@ -62,6 +101,34 @@ def test_msd_unwraps_periodic_trajectory(
     msd = diffusion.msd(x, box=box)
     expected_msd = diffusion.msd(expected)
     np.testing.assert_allclose(msd, expected_msd)
+
+
+@pytest.mark.parametrize(
+    "x, box, expected",
+    [
+        (np.array([1.0, 1.1]), 2.0, np.array([1.0, 1.1])),
+        (np.array([1.0, 0.9]), 2.0, np.array([1.0, 0.9])),
+        (np.array([0.0, 1.0]), 2.0, np.array([0.0, 1.0])),
+        (np.array([0.0, 1.9]), 2.0, np.array([0.0, -0.1])),
+        (np.array([0.0, 1.1]), 2.0, np.array([0.0, -0.9])),
+        (np.array([1.9, 0.0]), 2.0, np.array([1.9, 2.0])),
+        (np.array([1.1, 0.0]), 2.0, np.array([1.1, 2.0])),
+    ],
+)
+def test_msd_naive_unwraps_periodic_trajectory(
+    x: NDArray[np.float64], box: float, expected: NDArray[np.float64]
+) -> None:
+    msd = diffusion.msd_naive(x, box=box)
+    expected_msd = diffusion.msd_naive(expected)
+    np.testing.assert_allclose(msd, expected_msd)
+
+
+def test_msd_naive_matches_msd() -> None:
+    rng = np.random.default_rng(0)
+    x = np.cumsum(rng.normal(size=32))
+    np.testing.assert_allclose(
+        diffusion.msd_naive(x), diffusion.msd(x), rtol=1e-12, atol=1e-12
+    )
 
 
 def test_ld_is_exposed() -> None:
