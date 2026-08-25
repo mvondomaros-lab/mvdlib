@@ -1,6 +1,6 @@
 [project]
 name = "mvdlib"
-version = "0.16"
+version = "0.17"
 authors = [{ name = "Michael von Domaros", email = "mvondomaros@uni-marburg.de" }]
 description = "An incubator library with custom matplotlib styles, utility functions, and experimental tools for future projects."
 readme = "README.md"
@@ -8,7 +8,7 @@ license = "MIT"
 license-files = ["LICENSE"]
 
 requires-python = ">=3.10"
-dependencies = ["numba>=0.65,<0.66",
+dependencies = ["numba>=0.67.0,<0.68",
     "numpy",
     "scipy",
     "matplotlib"
