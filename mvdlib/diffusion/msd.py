@@ -74,6 +74,7 @@ def msd(
             raise ValueError("box must be positive")
         x = _unwrap(x, box)
 
+    x = x - x[0]
     return _mssq(x, maxsteps) - 2.0 * tcf(x, maxsteps, shift=False)
 
 
@@ -127,4 +128,5 @@ def msd_naive(
             raise ValueError("box must be positive")
         x = _unwrap(x, box)
 
+    x = x - x[0]
     return _msd_naive(x, maxsteps)

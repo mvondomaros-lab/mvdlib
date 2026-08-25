@@ -131,6 +131,16 @@ def test_msd_naive_matches_msd() -> None:
     )
 
 
+@pytest.mark.parametrize("compute_msd", [diffusion.msd, diffusion.msd_naive])
+def test_msd_is_stable_with_large_coordinate_offset(compute_msd) -> None:
+    x = np.arange(32, dtype=np.float64)
+    offset_x = x + 2.0**40
+
+    np.testing.assert_allclose(
+        compute_msd(offset_x), compute_msd(x), rtol=1e-12, atol=1e-12
+    )
+
+
 def test_ld_is_exposed() -> None:
     assert callable(diffusion.ld)
 
