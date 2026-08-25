@@ -1,3 +1,5 @@
+from math import ceil
+
 import numba
 import numpy as np
 from numpy.typing import NDArray
@@ -19,7 +21,7 @@ def cabs2(
 
 def prevpow2(x: int | float) -> int:
     """
-    Return the largest power of two not exceeding ``abs(x)``.
+    Return the largest power of two not exceeding ``abs(x)``, clamped to one.
     """
     n = int(abs(x))
     return 1 if n == 0 else 1 << n.bit_length() - 1
@@ -27,7 +29,7 @@ def prevpow2(x: int | float) -> int:
 
 def nextpow2(x: int | float) -> int:
     """
-    Return the smallest power of two not less than ``abs(x)``.
+    Return the smallest power of two not less than ``abs(x)``, clamped to one.
     """
-    n = int(abs(x))
+    n = ceil(abs(x))
     return 1 if n == 0 else 1 << (n - 1).bit_length()

@@ -235,3 +235,39 @@ def test_ld_rejects_invalid_inputs(
 
     with pytest.raises(error):
         diffusion.ld(**params)
+
+
+def test_ld_rejects_non_numba_compatible_callable() -> None:
+    values = []
+
+    def friction(x: float) -> float:
+        values.append(x)
+        return 1.0
+
+    with pytest.raises(TypeError, match="friction must be Numba-compatible"):
+        diffusion.ld(
+            friction=friction,
+            nsteps=1,
+            dt=0.01,
+            mass=1.0,
+            kt=1.0,
+            x0=0.0,
+            v0=0.0,
+        )
+
+
+def test_ld_rejects_invalid_callable_value_during_simulation() -> None:
+    def friction(x: float) -> float:
+        return 1.0 if x <= 0.0 else -1.0
+
+    with pytest.raises(ValueError, match="friction.*finite and positive"):
+        diffusion.ld(
+            friction=friction,
+            nsteps=1,
+            dt=0.1,
+            mass=1.0,
+            kt=1.0,
+            x0=0.0,
+            v0=1.0,
+            rng=np.random.default_rng(0),
+        )

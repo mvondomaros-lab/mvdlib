@@ -70,7 +70,8 @@ def ld(
         If an argument has an incompatible type.
     ValueError
         If a numeric argument is non-finite, non-positive where positivity is
-        required, or if ``nsteps`` is not divisible by ``save_freq``.
+        required, if a callable returns an invalid value during simulation,
+        or if ``nsteps`` is not divisible by ``save_freq``.
     """
     if not isinstance(nsteps, numbers.Integral):
         raise TypeError("nsteps must be an integer")
@@ -114,13 +115,19 @@ def ld(
     else:
         raise TypeError("friction must be a real number or callable")
 
-    force_value = force_func(x0)
+    try:
+        force_value = force_func(x0)
+    except numba.core.errors.NumbaError as error:
+        raise TypeError("force must be Numba-compatible") from error
     if not isinstance(force_value, numbers.Real):
         raise TypeError("force(x0) must return a real number")
     if not np.isfinite(force_value):
         raise ValueError("force(x0) must be finite")
 
-    friction_value = friction_func(x0)
+    try:
+        friction_value = friction_func(x0)
+    except numba.core.errors.NumbaError as error:
+        raise TypeError("friction must be Numba-compatible") from error
     if not isinstance(friction_value, numbers.Real):
         raise TypeError("friction(x0) must return a real number")
     if not np.isfinite(friction_value):

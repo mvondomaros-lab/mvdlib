@@ -111,9 +111,10 @@ def _process_signal(
     Optionally shift and scale a signal.
     """
     if shift:
+        x = x - x[0]
         x = x - np.mean(x)
     if scale:
-        std = np.std(x)
+        std = np.std(x - x[0])
         if std > 0.0:
             x = x / std
     return x

@@ -36,6 +36,9 @@ jobs:
       - name: Install Pixi environment
         run: pixi install --locked
 
+      - name: Test
+        run: pixi run pytest
+
       - name: Build artifacts
         run: pixi run build-artifacts
 

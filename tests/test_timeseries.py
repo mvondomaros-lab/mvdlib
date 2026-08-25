@@ -126,3 +126,16 @@ def test_tcf_large_signal() -> None:
     x = rng.standard_normal(10_000)
     tcf = timeseries.tcf(x)
     assert tcf.shape == x.shape
+
+
+def test_tcf_is_stable_with_large_coordinate_offset() -> None:
+    rng = np.random.default_rng(4)
+    x = np.cumsum(rng.normal(size=257)) + 1.0e12
+    centered_x = x - x[0]
+
+    np.testing.assert_allclose(
+        timeseries.tcf(x),
+        timeseries.tcf(centered_x),
+        rtol=1e-12,
+        atol=1e-12,
+    )

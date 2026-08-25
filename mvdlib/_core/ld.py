@@ -5,7 +5,7 @@ from numpy.typing import NDArray
 from mvdlib.types import NumbaScalarFloatFunc
 
 
-@numba.njit(fastmath=True)
+@numba.njit
 def ld(
     force: NumbaScalarFloatFunc,
     friction: NumbaScalarFloatFunc,
@@ -45,15 +45,24 @@ def ld(
     save_idx = 1
 
     for i in range(nsteps):
-        v += force(x) * half_dtm
+        force_value = force(x)
+        if not np.isfinite(force_value):
+            raise ValueError("force(x) must be finite")
+        v += force_value * half_dtm
         x += v * half_dt
 
-        gamma = friction(x) / mass
+        friction_value = friction(x)
+        if not np.isfinite(friction_value) or friction_value <= 0.0:
+            raise ValueError("friction(x) must be finite and positive")
+        gamma = friction_value / mass
         a = np.exp(-gamma * dt)
         v = a * v + sigma_v * np.sqrt(1.0 - a * a) * noise[i]
 
         x += v * half_dt
-        v += force(x) * half_dtm
+        force_value = force(x)
+        if not np.isfinite(force_value):
+            raise ValueError("force(x) must be finite")
+        v += force_value * half_dtm
         if (i + 1) % save_freq == 0:
             xs[save_idx] = x
             vs[save_idx] = v
