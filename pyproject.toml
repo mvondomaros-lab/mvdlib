@@ -36,6 +36,7 @@ preview = ["pixi-build"]
 hatch = "*"
 pytest = "*"
 seaborn = "*"
+pixi-pycharm = "*"
 
 [tool.pixi.pypi-dependencies]
 mvdlib = { path = ".", editable = true }
