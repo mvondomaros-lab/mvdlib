@@ -1,0 +1,86 @@
+context:
+  version: "0.18.0"
+
+recipe:
+  name: mvdlib
+  version: ${{ version }}
+
+source:
+  path: ..
+
+outputs:
+  - package:
+      name: mvdlib-core
+    build:
+      number: 0
+      noarch: python
+      script: ${{ PYTHON }} -m pip install . --no-deps --no-build-isolation
+    requirements:
+      host:
+        - hatchling <2
+        - pip
+        - python >=3.12
+      run:
+        - python >=3.12
+        - numpy >=2.2.6
+    tests:
+      - python:
+          imports:
+            - mvdlib
+
+  - package:
+      name: mvdlib-plots
+    build:
+      number: 0
+      noarch: generic
+    requirements:
+      run:
+        - ${{ pin_subpackage('mvdlib-core', exact=True) }}
+        - matplotlib >=3.10.6
+        - scipy >=1.16.1
+        - seaborn >=0.13.2
+
+  - package:
+      name: mvdlib-stats
+    build:
+      number: 0
+      noarch: generic
+    requirements:
+      run:
+        - ${{ pin_subpackage('mvdlib-core', exact=True) }}
+        - numba >=0.62
+        - scipy >=1.16.1
+
+  - package:
+      name: mvdlib-diffusion
+    build:
+      number: 0
+      noarch: generic
+    requirements:
+      run:
+        - ${{ pin_subpackage('mvdlib-core', exact=True) }}
+        - numba >=0.62
+        - scipy >=1.16.1
+
+  - package:
+      name: mvdlib-gromacs
+    build:
+      number: 0
+      noarch: generic
+    requirements:
+      run:
+        - ${{ pin_subpackage('mvdlib-core', exact=True) }}
+        - pyedr >=0.8,<0.9
+
+  - package:
+      name: mvdlib
+    build:
+      number: 0
+      noarch: generic
+    requirements:
+      run:
+        - ${{ pin_subpackage('mvdlib-core', exact=True) }}
+        - ${{ pin_subpackage('mvdlib-plots', exact=True) }}
+        - ${{ pin_subpackage('mvdlib-stats', exact=True) }}
+        - ${{ pin_subpackage('mvdlib-diffusion', exact=True) }}
+        - ${{ pin_subpackage('mvdlib-gromacs', exact=True) }}
