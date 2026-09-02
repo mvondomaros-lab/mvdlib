@@ -41,6 +41,12 @@ def test_contourplot_smoke() -> None:
 
     assert mesh.axes is ax
     assert contourset.axes is ax
+    assert contourset.get_edgecolor()[0].tolist() == [
+        48 / 255,
+        52 / 255,
+        58 / 255,
+        1.0,
+    ]
 
 
 def test_kdeplot_smoke() -> None:

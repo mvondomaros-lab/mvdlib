@@ -7,6 +7,8 @@ from matplotlib.lines import Line2D
 from matplotlib.typing import ColorType
 from numpy.typing import ArrayLike
 
+from mvdlib.style.colors import INK
+
 
 def contourplot(
     ax: Axes,
@@ -36,7 +38,7 @@ def contourplot(
     cmap
         Color mesh colormap.
     contour_color
-        Contour line color. Defaults to ``"C0"``.
+        Contour line color. Defaults to ``INK``.
     clabel_color
         Contour label color. Defaults to ``contour_color``.
     pcolormesh_kwargs
@@ -60,7 +62,7 @@ def contourplot(
     pcolormesh_kwargs.setdefault("alpha", alpha)
     if cmap is not None:
         pcolormesh_kwargs.setdefault("cmap", cmap)
-    contour_color = "C0" if contour_color is None else contour_color
+    contour_color = INK if contour_color is None else contour_color
     clabel_color = contour_color if clabel_color is None else clabel_color
     contour_kwargs.setdefault("colors", contour_color)
     clabel_kwargs.setdefault("colors", clabel_color)
