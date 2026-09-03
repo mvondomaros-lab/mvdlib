@@ -16,7 +16,7 @@ xtick.color: "#30343A"
 ytick.color: "#30343A"
 
 ## Lines
-axes.prop_cycle: cycler("color", ["#678BBE", "#BF6765", "#55A868"])
+axes.prop_cycle: cycler("color", ["#356FA8", "#A03A6C", "#C47F00"])
 grid.color: "#E9E9E9"
 hatch.color: "#30343A"
 

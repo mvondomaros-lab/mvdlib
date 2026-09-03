@@ -5,9 +5,9 @@ import seaborn as sns
 
 # Structural ink and semantic roles for line data.
 INK = "#30343A"
-BASE = "#678BBE"
-H1 = "#BF6765"
-H2 = "#55A868"
+BASE = "#356FA8"
+H1 = "#A03A6C"
+H2 = "#C47F00"
 
 LINES = (BASE, H1, H2)
 
