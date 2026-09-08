@@ -7,9 +7,10 @@ import seaborn as sns
 INK = "#30343A"
 BASE = "#356FA8"
 H1 = "#A03A6C"
-H2 = "#C47F00"
+H2 = "#27857D"
+H3 = "#C47F00"
 
-LINES = (BASE, H1, H2)
+LINES = (BASE, H1, H2, H3)
 
 # Seaborn registers these palettes with Matplotlib on import.
 SEQ = sns.color_palette("crest", as_cmap=True)
