@@ -1,41 +1,21 @@
 [project]
 name = "mvdlib"
-version = "0.21.0"
+version = "0.22.0"
 authors = [{ name = "Michael von Domaros", email = "mvondomaros@uni-marburg.de" }]
-description = "An incubator library with custom Matplotlib styles, utility functions, and experimental tools for future projects."
+description = "The lab's Matplotlib plotting style and plotting helpers."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 
 requires-python = ">=3.12"
 dependencies = [
+    "matplotlib>=3.10.6",
     "numpy>=2.2.6",
+    "scipy>=1.16.1",
+    "seaborn>=0.13.2",
 ]
 
 [project.optional-dependencies]
-plots = [
-    "matplotlib>=3.10.6",
-    "scipy>=1.16.1",
-    "seaborn>=0.13.2",
-]
-stats = [
-    "numba>=0.62",
-    "scipy>=1.16.1",
-]
-diffusion = [
-    "numba>=0.62",
-    "scipy>=1.16.1",
-]
-all = [
-    "matplotlib>=3.10.6",
-    "numba>=0.62",
-    "pyedr>=0.8,<0.9",
-    "scipy>=1.16.1",
-    "seaborn>=0.13.2",
-]
-gromacs = [
-    "pyedr>=0.8,<0.9",
-]
 test = [
     "pytest>=8",
 ]
@@ -61,10 +41,8 @@ preview = ["pixi-build"]
 [tool.pixi.dependencies]
 hatch = "<2"
 matplotlib = ">=3.10.6"
-numba = ">=0.62"
 numpy = ">=2.2.6"
 pixi-pycharm = "*"
-pyedr = ">=0.8,<0.9"
 pytest = ">=8"
 scipy = ">=1.16.1"
 seaborn = ">=0.13.2"
