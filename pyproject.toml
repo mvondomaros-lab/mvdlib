@@ -12,7 +12,6 @@ dependencies = [
     "matplotlib>=3.10.6",
     "numpy>=2.2.6",
     "scipy>=1.16.1",
-    "seaborn>=0.13.2",
 ]
 
 [project.optional-dependencies]
@@ -26,7 +25,7 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["mvdlib"]
-include = ["mvdlib/style/*.mplstyle"]
+include = ["mvdlib/style/*.mplstyle", "mvdlib/style/fonts/*"]
 
 [tool.hatch.build.targets.sdist]
 include = ["mvdlib",
@@ -45,12 +44,14 @@ numpy = ">=2.2.6"
 pixi-pycharm = "*"
 pytest = ">=8"
 scipy = ">=1.16.1"
-seaborn = ">=0.13.2"
+markdown = ">=3.11.3,<4"
 
 [tool.pixi.pypi-dependencies]
 mvdlib = { path = ".", editable = true }
 
 [tool.pixi.tasks]
+gallery = { cmd = "python docs/gallery.py" }
+site = { cmd = "python docs/build_site.py", depends-on = ["gallery"] }
 build-conda = { cmd = "pixi publish" }
 build-wheel = { cmd = "hatch build" }
 stage-artifacts = { cmd = """

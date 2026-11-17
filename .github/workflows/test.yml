@@ -15,7 +15,7 @@ jobs:
         include:
           - python: "3.12"
             stack: minimum supported dependencies
-            constraints: "numpy==2.2.6 matplotlib==3.10.6 scipy==1.16.1 seaborn==0.13.2"
+            constraints: "numpy==2.2.6 matplotlib==3.10.6 scipy==1.16.1"
           - python: "3.12"
             stack: current compatible dependencies
             constraints: ""

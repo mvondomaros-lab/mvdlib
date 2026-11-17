@@ -1,3 +1,5 @@
+"""Plot types that Matplotlib does not provide directly."""
+
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.collections import QuadMesh
@@ -10,7 +12,7 @@ from numpy.typing import ArrayLike
 from mvdlib.style.colors import INK
 
 
-def contourplot(
+def plot_contour(
     ax: Axes,
     x: ArrayLike,
     y: ArrayLike,
@@ -18,6 +20,8 @@ def contourplot(
     *,
     alpha: float | None = 0.5,
     cmap: str | Colormap | None = None,
+    clabels: bool = True,
+    grid: bool = False,
     contour_color: ColorType | None = None,
     clabel_color: ColorType | None = None,
     pcolormesh_kwargs: dict | None = None,
@@ -27,6 +31,9 @@ def contourplot(
     """
     Draw a combined color mesh and contour plot.
 
+    Pass the returned mesh to ``Figure.colorbar`` to add a color bar; it
+    inherits the mesh transparency.
+
     Parameters
     ----------
     ax
@@ -34,9 +41,14 @@ def contourplot(
     x, y, z
         Coordinates and values passed to ``Axes.pcolormesh`` and ``Axes.contour``.
     alpha
-        Color mesh transparency.
+        Color mesh transparency. The default keeps contours legible.
     cmap
-        Color mesh colormap.
+        Color mesh colormap. Defaults to the style's ``image.cmap``.
+    clabels
+        Whether to label the contours with their values.
+    grid
+        Whether to keep the axis grid. Off by default, since it shows through
+        the transparent mesh.
     contour_color
         Contour line color. Defaults to ``INK``.
     clabel_color
@@ -57,7 +69,7 @@ def contourplot(
     contour_kwargs = {} if contour_kwargs is None else contour_kwargs.copy()
     clabel_kwargs = {} if clabel_kwargs is None else clabel_kwargs.copy()
 
-    ax.grid(False)
+    ax.grid(grid)
 
     pcolormesh_kwargs.setdefault("alpha", alpha)
     if cmap is not None:
@@ -69,21 +81,24 @@ def contourplot(
 
     mesh = ax.pcolormesh(x, y, z, **pcolormesh_kwargs)
     contourset = ax.contour(x, y, z, **contour_kwargs)
-    contourset.clabel(**clabel_kwargs)
+    if clabels:
+        contourset.clabel(**clabel_kwargs)
 
     return mesh, contourset
 
 
-def kdeplot(
+def plot_kde(
     ax: Axes,
     x: ArrayLike,
     *,
     grid: ArrayLike | None = None,
-    factor: float | None = None,
+    factor: float | str | None = None,
+    fill: bool = False,
+    fill_alpha: float = 0.2,
     **kwargs,
 ) -> Line2D:
     """
-    Draw a kernel density estimate.
+    Draw a Gaussian kernel density estimate.
 
     Parameters
     ----------
@@ -92,9 +107,15 @@ def kdeplot(
     x
         Input samples.
     grid
-        Evaluation grid. Generated automatically if omitted.
+        Evaluation grid. Defaults to 250 points spanning the samples plus
+        three kernel bandwidths on either side, so the density decays to zero.
     factor
-        Bandwidth factor passed to ``scipy.stats.gaussian_kde``.
+        Bandwidth factor passed to ``scipy.stats.gaussian_kde`` as
+        ``bw_method``.
+    fill
+        Whether to fill the area under the curve.
+    fill_alpha
+        Fill transparency.
     **kwargs
         Additional keyword arguments passed to ``Axes.plot``.
 
@@ -112,11 +133,21 @@ def kdeplot(
         raise ValueError("x must not be empty")
     kde = gaussian_kde(x, bw_method=factor)
     if grid is None:
-        grid = np.linspace(x.min() - 0.02 * np.ptp(x), x.max() + 0.02 * np.ptp(x), 250)
+        pad = 3.0 * np.sqrt(kde.covariance[0, 0])
+        grid = np.linspace(x.min() - pad, x.max() + pad, 250)
     else:
         grid = np.asarray(grid, dtype=np.float64)
         if grid.ndim != 1:
             raise ValueError("grid must be one-dimensional")
     y = kde(grid)
-    lines = ax.plot(grid, y, **kwargs)
-    return lines[0]
+    (line,) = ax.plot(grid, y, **kwargs)
+    if fill:
+        ax.fill_between(
+            grid,
+            y,
+            color=line.get_color(),
+            alpha=fill_alpha,
+            linewidth=0.0,
+            zorder=line.get_zorder() - 0.1,
+        )
+    return line

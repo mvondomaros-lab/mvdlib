@@ -6,6 +6,7 @@
 .idea
 
 # Build
+site/
 dist/*
 mvdlib.egg-info
 mvdlib-*.conda

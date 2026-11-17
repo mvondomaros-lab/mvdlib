@@ -1,3 +1,8 @@
+# The lab's default Matplotlib style.
+#
+# Colours must match mvdlib/style/colors.py (checked by the test suite).
+
+
 # Color
 
 ## Text
@@ -16,15 +21,29 @@ xtick.color: "#30343A"
 ytick.color: "#30343A"
 
 ## Lines
-axes.prop_cycle: cycler("color", ["#356FA8", "#A03A6C", "#27857D", "#C47F00"])
+axes.prop_cycle: cycler("color", ["#236DA6", "#8E274B", "#079281", "#BC8C06"])
 grid.color: "#E9E9E9"
 hatch.color: "#30343A"
 
+## Colormaps (registered on import of mvdlib.style)
+image.cmap: mvdlib_seq
 
-#  Font
+
+# Font
 font.size: 9
 font.family: sans-serif
-font.sans-serif: Fira Sans
+font.sans-serif: Fira Sans, Helvetica, Arial, DejaVu Sans
+
+## Typeset math in the text font.
+mathtext.fontset: custom
+mathtext.rm: Fira Sans
+mathtext.it: Fira Sans:italic
+mathtext.bf: Fira Sans:bold
+mathtext.sf: Fira Sans
+mathtext.bfit: Fira Sans:italic:bold
+mathtext.cal: Fira Sans:italic
+mathtext.tt: DejaVu Sans Mono
+mathtext.fallback: stixsans
 
 
 # Axes
@@ -33,6 +52,7 @@ axes.axisbelow: True
 axes.formatter.limits: -3, 4
 axes.formatter.use_mathtext: True
 axes.labelpad: 1.5
+axes.linewidth: 0.6
 axes.spines.right: False
 axes.spines.top: False
 axes.xmargin: 0.02
@@ -43,24 +63,44 @@ axes.zmargin: 0.02
 # Ticks
 xtick.direction: out
 xtick.major.pad: 1.5
-xtick.minor.visible: True
+xtick.major.width: 0.6
+xtick.minor.width: 0.5
 
 ytick.direction: out
 ytick.major.pad: 1.5
-ytick.minor.visible: True
+ytick.major.width: 0.6
+ytick.minor.width: 0.5
+
 
 # Grid
 axes.grid: True
-grid.linestyle: --
-grid.alpha: 0.8
+grid.linestyle: -
+grid.linewidth: 0.5
 
-# Lines
-lines.linewidth: 0.8
+
+# Lines and markers
+lines.linewidth: 1.0
+lines.markersize: 4
+patch.linewidth: 0.6
+errorbar.capsize: 2
+
 
 # Figure
+## Constrained layout fits plain plt.subplots figures to their size.
+## mvdlib.plots.subplots replaces it with fixed-size panels.
 figure.autolayout: False
 figure.constrained_layout.use: True
 figure.dpi: 140
+figure.labelsize: medium
+figure.titlesize: medium
+figure.titleweight: bold
+
+
+# Export
+savefig.dpi: 600
+pdf.fonttype: 42
+ps.fonttype: 42
+svg.fonttype: none
 
 
 # Title
@@ -69,15 +109,16 @@ axes.titlepad: 6.0
 axes.titlesize: medium
 axes.titleweight: bold
 
+
 # Misc
-hist.bins: 20
-image.cmap: crest
-pcolor.shading: gouraud
+hist.bins: auto
+pcolor.shading: auto
+
 
 # Contour Plots
 contour.negative_linestyle: dashed
 contour.linewidth: 0.6
-contour.algorithm: threaded
+
 
 # Legends
 legend.columnspacing: 1.0
