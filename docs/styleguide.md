@@ -54,21 +54,25 @@ fig, ax = subplots(max_width=ACS_SINGLE_COLUMN)  # warn if too wide
 
 Use one panel size for all figures of a paper, so that single- and
 multi-panel figures sit side by side at the same scale. Pick it from the most
-crowded layout the paper needs. For ACS journals (at most 3.25 in for one
-column and 7 in for two), with the style's 9 pt text:
+crowded layout the paper needs. For ACS journals (at most 240 pt, 3.33 in, for
+one column and 504 pt, 7 in, for two), with the style's 9 pt text:
 
 | Widest layout in the paper | Largest panel width |
 | --- | --- |
 | 1 panel in a single column | 2.7 in |
-| 1 panel with a colour bar in a single column | 2.15 in |
-| 2 panels in a double column | 3.0 in |
+| 1 panel with a colour bar in a single column | 2.25 in |
+| 2 panels with separate y-axes in a double column | 2.9 in |
 | 3 panels with a shared y-axis in a double column | 2.0 in |
-| 3 panels with separate y-axes in a double column | 1.8 in |
+| 3 panels with separate y-axes in a double column | 1.7 in |
 | 4 panels with a shared y-axis in a double column | 1.45 in |
 
 The default panel, `PANEL = (2.0, 1.5)`, fits three panels in a row. Journal
 column widths are maximums: a figure narrower than the column is fine. For
 other journals, pass their widths as `max_width`.
+
+The style meets ACS's minimums with room to spare: text is 9 pt (legends
+8 pt) against a minimum of 4.5 pt, and the thinnest lines (grid, minor ticks)
+are 0.5 pt, the minimum line weight.
 
 Plain `plt.subplots` figures use constrained layout, which fits panels into a
 fixed figure size. Use them for quick looks, not for publication.

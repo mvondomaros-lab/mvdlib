@@ -22,11 +22,11 @@ from matplotlib.transforms import Bbox
 PANEL = (2.0, 1.5)
 """Default panel width and height in inches."""
 
-ACS_SINGLE_COLUMN = 3.25
-"""Maximum width of a single-column ACS figure in inches."""
+ACS_SINGLE_COLUMN = 240.0 / 72.0
+"""Maximum width of a single-column ACS figure in inches (240 pt)."""
 
-ACS_DOUBLE_COLUMN = 7.0
-"""Maximum width of a double-column ACS figure in inches."""
+ACS_DOUBLE_COLUMN = 504.0 / 72.0
+"""Maximum width of a double-column ACS figure in inches (504 pt)."""
 
 PAD = 3.0 / 72.0
 """Space between neighboring decorations and around the figure, in inches."""
