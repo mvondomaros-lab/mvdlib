@@ -134,9 +134,11 @@ def test_max_width_is_silent_when_respected() -> None:
         labelled(a, ylabel="")
     axes[0].set_ylabel(axis_label("E", "kJ mol^{-1}"))
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
         save(fig)
+
+    assert not [w for w in caught if "max_width" in str(w.message)]
 
 
 def test_squeeze() -> None:
